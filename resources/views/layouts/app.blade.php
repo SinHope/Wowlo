@@ -42,14 +42,14 @@
                 ['label' => 'Messages',          'icon' => 'mail',  'href' => route('tutor.messages.index'), 'active' => request()->routeIs('tutor.messages.*')],
                 ['label' => 'Finance',           'icon' => 'money', 'href' => route('tutor.finance.index'), 'active' => request()->routeIs('tutor.finance.*')],
                 ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => route('tutor.billing.index'), 'active' => request()->routeIs('tutor.billing.*')],
-                ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => '#', 'active' => false],
-                ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => '#', 'active' => false],
+                ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => route('tutor.exam-papers.index'), 'active' => request()->routeIs('tutor.exam-papers.*')],
+                ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => route('tutor.quizzes.index'), 'active' => request()->routeIs('tutor.quizzes.*')],
             ] : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
                 ['label' => 'Messages',      'icon' => 'mail',  'href' => route('student.messages.index'), 'active' => request()->routeIs('student.messages.*'), 'badge' => auth()->user()->receivedMessages()->where('is_read', false)->count()],
                 ['label' => 'Tuition Fee',   'icon' => 'money', 'href' => route('student.fees.index'), 'active' => request()->routeIs('student.fees.*')],
-                ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => '#', 'active' => false],
+                ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => route('student.exam-papers.index'), 'active' => request()->routeIs('student.exam-papers.*')],
                 ['label' => 'Quizzes',       'icon' => 'quiz',  'href' => '#', 'active' => false],
                 ['label' => 'Profile',       'icon' => 'user',  'href' => route('profile.edit'), 'active' => request()->routeIs('profile.*')],
             ];

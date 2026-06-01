@@ -113,4 +113,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(Bill::class, 'student_id');
     }
+
+    /**
+     * Quizzes created by this user (as a tutor).
+     */
+    public function quizzesCreated(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Quiz::class, 'tutor_id');
+    }
+
+    /**
+     * Quizzes assigned to this user (as a student).
+     */
+    public function quizAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(QuizAssignment::class, 'student_id');
+    }
+
+    /**
+     * This student's quiz attempts.
+     */
+    public function quizAttempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(QuizAttempt::class, 'student_id');
+    }
 }

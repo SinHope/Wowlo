@@ -27,4 +27,81 @@ return [
     */
     'currency' => env('WOWLO_CURRENCY', 'SGD'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Levels
+    |--------------------------------------------------------------------------
+    | Canonical list of school levels. Exam papers are organised first by
+    | level, then subject, then year. Single source of truth for the upload
+    | dropdown, validation, and grouping order. Order here is display order.
+    */
+    'levels' => [
+        'Primary 1',
+        'Primary 2',
+        'Primary 3',
+        'Primary 4',
+        'Primary 5',
+        'Primary 6',
+        'Secondary 1',
+        'Secondary 2',
+        'Secondary 3',
+        'Secondary 4',
+        'Secondary 5',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exam types
+    |--------------------------------------------------------------------------
+    | Singapore primary/secondary assessment schedule. Used by the quiz
+    | create form and validation. Key = stored value, value = display label.
+    */
+    'exam_types' => [
+        'WA1'                => 'WA1 (Weighted Assessment 1)',
+        'MidYear'            => 'Mid-Year Exam',
+        'WA2'                => 'WA2 (Weighted Assessment 2)',
+        'EndYear'            => 'End-Year Exam',
+        'Quiz'               => 'Quiz',
+        'PeriodicAssessment' => 'Periodic Assessment',
+        'TopicEvaluation'    => 'Topic Evaluation',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Subjects
+    |--------------------------------------------------------------------------
+    | Canonical list of subjects. Single source of truth for the exam-paper
+    | upload dropdown, its validation rule, and the student filter. Add a
+    | subject here and it appears everywhere. Order here is display order.
+    */
+    'subjects' => [
+        'English',
+        'Mathematics',
+        'Science',
+        'Malay',
+        'Chinese',
+        'Tamil',
+        'Hindi',
+        'Music',
+        'Art',
+        'G1 Mathematics',
+        'G2 Mathematics',
+        'G3 Mathematics',
+        'G1 English',
+        'G2 English',
+        'G3 English',
+        'G1 Science',
+        'G2 Science',
+        'G3 Science',
+        'Geography',
+        'History',
+        'Social Studies',
+        'Combined Science(Chemistry/Physics)',
+        'Pure Chemistry',
+        'Pure Physics',
+        'IP Subject(English/Math/Science)',
+        'Web Development',
+        'Others',
+    ],
+
 ];

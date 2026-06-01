@@ -6,10 +6,13 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Student\FeeController as StudentFeeController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
+use App\Http\Controllers\Student\ExamPaperController as StudentExamPaperController;
 use App\Http\Controllers\Tutor\BillController as TutorBillController;
+use App\Http\Controllers\Tutor\ExamPaperController as TutorExamPaperController;
 use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
 use App\Http\Controllers\Tutor\HomeworkController as TutorHomeworkController;
 use App\Http\Controllers\Tutor\MessageController as TutorMessageController;
+use App\Http\Controllers\Tutor\QuizController as TutorQuizController;
 use App\Http\Controllers\Tutor\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +65,22 @@ Route::middleware(['auth', 'verified', 'role:tutor'])
         Route::get('billing/create', [TutorBillController::class, 'create'])->name('billing.create');
         Route::post('billing', [TutorBillController::class, 'store'])->name('billing.store');
         Route::get('billing/{bill}', [TutorBillController::class, 'show'])->name('billing.show');
+
+        // Exam Papers — upload, list, delete, download.
+        Route::get('exam-papers', [TutorExamPaperController::class, 'index'])->name('exam-papers.index');
+        Route::get('exam-papers/create', [TutorExamPaperController::class, 'create'])->name('exam-papers.create');
+        Route::post('exam-papers', [TutorExamPaperController::class, 'store'])->name('exam-papers.store');
+        Route::delete('exam-papers/{examPaper}', [TutorExamPaperController::class, 'destroy'])->name('exam-papers.destroy');
+        Route::get('exam-papers/{examPaper}/download', [TutorExamPaperController::class, 'download'])->name('exam-papers.download');
+
+        // Quizzes — create MCQ quizzes, assign to students, view results.
+        Route::get('quizzes', [TutorQuizController::class, 'index'])->name('quizzes.index');
+        Route::get('quizzes/create', [TutorQuizController::class, 'create'])->name('quizzes.create');
+        Route::post('quizzes', [TutorQuizController::class, 'store'])->name('quizzes.store');
+        Route::get('quizzes/questions/{question}/image', [TutorQuizController::class, 'questionImage'])->name('quizzes.questions.image');
+        Route::get('quizzes/{quiz}', [TutorQuizController::class, 'show'])->name('quizzes.show');
+        Route::post('quizzes/{quiz}/assign', [TutorQuizController::class, 'assign'])->name('quizzes.assign');
+        Route::delete('quizzes/{quiz}', [TutorQuizController::class, 'destroy'])->name('quizzes.destroy');
     });
 
 // Student-only area — RoleMiddleware blocks tutors from these routes.
@@ -83,6 +102,10 @@ Route::middleware(['auth', 'verified', 'role:student'])
         Route::post('fees/unlock', [StudentFeeController::class, 'attemptUnlock'])->name('fees.unlock.attempt');
         Route::post('fees/lock', [StudentFeeController::class, 'lock'])->name('fees.lock');
         Route::get('fees', [StudentFeeController::class, 'index'])->middleware('fee.unlocked')->name('fees.index');
+
+        // Exam Papers — all students can browse and download all papers.
+        Route::get('exam-papers', [StudentExamPaperController::class, 'index'])->name('exam-papers.index');
+        Route::get('exam-papers/{examPaper}/download', [StudentExamPaperController::class, 'download'])->name('exam-papers.download');
     });
 
 require __DIR__.'/auth.php';
