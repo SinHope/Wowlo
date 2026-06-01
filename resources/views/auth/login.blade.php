@@ -66,4 +66,10 @@
         </svg>
         Continue with Google
     </a>
+
+    <!-- Privacy Policy -->
+    <p class="mt-6 text-center text-xs text-muted">
+        By logging in, you agree to our
+        <a href="{{ route('privacy-policy') }}" target="_blank" class="text-primary-dark hover:underline font-semibold">Privacy Policy</a>.
+    </p>
 </x-guest-layout>

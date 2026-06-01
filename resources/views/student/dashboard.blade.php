@@ -42,8 +42,23 @@
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
                     </span>
                     <h3 class="text-lg font-bold text-ink">Latest Message</h3>
+                    @if (($unreadMessages ?? 0) > 0)
+                        <span class="ml-auto rounded-full bg-amber px-2 py-0.5 text-xs font-bold text-white">{{ $unreadMessages }} new</span>
+                    @endif
                 </div>
-                @if (! $latestMessage)
+                @if ($latestMessage)
+                    <a href="{{ route('student.messages.show', $latestMessage) }}" class="block rounded-xl px-3 py-2.5 transition-colors hover:bg-cream">
+                        <div class="flex items-center gap-2">
+                            <p @class(['truncate text-ink', 'font-extrabold' => ! $latestMessage->is_read, 'font-semibold' => $latestMessage->is_read])>{{ $latestMessage->subject }}</p>
+                            @unless ($latestMessage->is_read)
+                                <span class="h-2 w-2 shrink-0 rounded-full bg-primary"></span>
+                            @endunless
+                        </div>
+                        <p class="mt-0.5 line-clamp-2 text-sm text-muted">{{ $latestMessage->body }}</p>
+                        <p class="mt-1 text-xs text-muted">{{ $latestMessage->created_at->format('d M Y') }}</p>
+                    </a>
+                    <a href="{{ route('student.messages.index') }}" class="mt-2 block text-center text-sm font-semibold text-primary-dark hover:underline">View all messages</a>
+                @else
                     <div class="rounded-xl bg-cream py-8 text-center">
                         <p class="font-semibold text-ink">No messages yet</p>
                         <p class="text-sm text-muted">Messages from your tutor will appear here.</p>
@@ -60,7 +75,7 @@
                     <p class="mt-1 text-2xl font-extrabold text-ink">Locked 🔒</p>
                     <p class="text-xs text-muted">Ask your parent to unlock the fee section.</p>
                 </div>
-                <a href="#" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">View fees</a>
+                <a href="{{ route('student.fees.index') }}" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">View fees</a>
             </div>
         </div>
     </div>

@@ -39,16 +39,16 @@
                 ['label' => 'Students',          'icon' => 'users', 'href' => route('tutor.students.index'), 'active' => request()->routeIs('tutor.students.*')],
                 ['label' => 'Homework',          'icon' => 'book',  'href' => route('tutor.homework.index'), 'active' => request()->routeIs('tutor.homework.index', 'tutor.homework.create', 'tutor.homework.edit')],
                 ['label' => 'Homework Status',   'icon' => 'check', 'href' => route('tutor.homework.status'), 'active' => request()->routeIs('tutor.homework.status')],
-                ['label' => 'Messages',          'icon' => 'mail',  'href' => '#', 'active' => false],
-                ['label' => 'Finance',           'icon' => 'money', 'href' => '#', 'active' => false],
-                ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => '#', 'active' => false],
+                ['label' => 'Messages',          'icon' => 'mail',  'href' => route('tutor.messages.index'), 'active' => request()->routeIs('tutor.messages.*')],
+                ['label' => 'Finance',           'icon' => 'money', 'href' => route('tutor.finance.index'), 'active' => request()->routeIs('tutor.finance.*')],
+                ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => route('tutor.billing.index'), 'active' => request()->routeIs('tutor.billing.*')],
                 ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => '#', 'active' => false],
                 ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => '#', 'active' => false],
             ] : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
-                ['label' => 'Messages',      'icon' => 'mail',  'href' => '#', 'active' => false],
-                ['label' => 'Tuition Fee',   'icon' => 'money', 'href' => '#', 'active' => false],
+                ['label' => 'Messages',      'icon' => 'mail',  'href' => route('student.messages.index'), 'active' => request()->routeIs('student.messages.*'), 'badge' => auth()->user()->receivedMessages()->where('is_read', false)->count()],
+                ['label' => 'Tuition Fee',   'icon' => 'money', 'href' => route('student.fees.index'), 'active' => request()->routeIs('student.fees.*')],
                 ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => '#', 'active' => false],
                 ['label' => 'Quizzes',       'icon' => 'quiz',  'href' => '#', 'active' => false],
                 ['label' => 'Profile',       'icon' => 'user',  'href' => route('profile.edit'), 'active' => request()->routeIs('profile.*')],
@@ -81,7 +81,14 @@
                             <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$item['icon']] }}" />
                             </svg>
-                            {{ $item['label'] }}
+                            <span class="flex-1">{{ $item['label'] }}</span>
+                            @if (! empty($item['badge']))
+                                <span @class([
+                                    'grid h-5 min-w-[1.25rem] place-items-center rounded-full px-1.5 text-xs font-bold',
+                                    'bg-white text-primary' => $item['active'],
+                                    'bg-amber text-white' => ! $item['active'],
+                                ])>{{ $item['badge'] }}</span>
+                            @endif
                         </a>
                     @endforeach
                 </nav>

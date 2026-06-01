@@ -30,7 +30,8 @@ class DashboardController extends Controller
                 ->take(3)
                 ->get(),
             'pendingCount' => $user->homework()->where('status', 'pending')->count(),
-            'latestMessage' => null,
+            'latestMessage' => $user->receivedMessages()->with('sender')->latest()->first(),
+            'unreadMessages' => $user->receivedMessages()->where('is_read', false)->count(),
             'outstanding' => 0,
         ]);
     }

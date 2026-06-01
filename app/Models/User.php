@@ -73,4 +73,44 @@ class User extends Authenticatable
     {
         return $this->hasMany(Homework::class, 'tutor_id');
     }
+
+    /**
+     * Messages this user has received (as a student/parent).
+     */
+    public function receivedMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    /**
+     * Messages this user has sent (as a tutor).
+     */
+    public function sentMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * This student's fee structure (hourly rate). One per student.
+     */
+    public function tuitionFee(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TuitionFee::class, 'student_id');
+    }
+
+    /**
+     * Payments this student has made.
+     */
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class, 'student_id');
+    }
+
+    /**
+     * Bills issued to this student.
+     */
+    public function bills(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Bill::class, 'student_id');
+    }
 }
