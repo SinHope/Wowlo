@@ -1,7 +1,8 @@
 <x-app-layout>
     <x-slot name="header">Students</x-slot>
 
-    <div class="mx-auto max-w-4xl space-y-5">
+    <div class="mx-auto max-w-4xl space-y-5"
+         x-data="spinner('Connecting to server…', 'Establishing a connection to database…')">
 
         @if (session('status'))
             <div x-data="{ show: true }" x-show="show" x-transition
@@ -16,7 +17,7 @@
                 <h2 class="text-2xl font-extrabold text-ink">Students</h2>
                 <p class="text-muted">{{ $students->total() }} {{ Str::plural('student', $students->total()) }} total</p>
             </div>
-            <a href="{{ route('tutor.students.create') }}"
+            <a href="{{ route('tutor.students.create') }}" @click="start()"
                class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 Add Student
@@ -43,7 +44,7 @@
             <div class="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
                 <p class="text-lg font-bold text-ink">No students yet</p>
                 <p class="mt-1 text-sm text-muted">Add your first student to get started.</p>
-                <a href="{{ route('tutor.students.create') }}"
+                <a href="{{ route('tutor.students.create') }}" @click="start()"
                    class="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
                     Add Student
                 </a>
@@ -53,5 +54,7 @@
         @if ($students->hasPages())
             <div>{{ $students->links() }}</div>
         @endif
+
+        <x-spinner-overlay />
     </div>
 </x-app-layout>

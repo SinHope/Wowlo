@@ -9,6 +9,15 @@
 
         <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
 
+        <!-- PWA -->
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <meta name="theme-color" content="#7C3AED">
+        <link rel="apple-touch-icon" href="{{ asset('images/pwa/icon-192.png') }}">
+        {{-- VAPID *public* key — safe to expose; needed by the browser to subscribe to push. --}}
+        <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
+        <meta name="push-subscribe-url" content="{{ route('push.subscribe') }}">
+        <meta name="push-unsubscribe-url" content="{{ route('push.unsubscribe') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=nunito:300,400,600,700,800&display=swap" rel="stylesheet" />
@@ -139,5 +148,7 @@
                 </main>
             </div>
         </div>
+
+        @include('partials.pwa-install')
     </body>
 </html>

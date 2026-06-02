@@ -11,10 +11,23 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <!-- Subject -->
+        @php
+            $subjects = config('wowlo.subjects');
+            $currentSubject = old('subject', $hw?->subject);
+        @endphp
         <div>
             <x-input-label for="subject" value="Subject" />
-            <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full"
-                          :value="old('subject', $hw?->subject)" placeholder="e.g. Maths" required />
+            <select id="subject" name="subject" required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
+                <option value="" disabled @selected(! $currentSubject)>Select subject…</option>
+                {{-- Keep an existing non-canonical value selectable so editing never silently changes it. --}}
+                @if ($currentSubject && ! in_array($currentSubject, $subjects, true))
+                    <option value="{{ $currentSubject }}" selected>{{ $currentSubject }}</option>
+                @endif
+                @foreach ($subjects as $s)
+                    <option value="{{ $s }}" @selected($currentSubject === $s)>{{ $s }}</option>
+                @endforeach
+            </select>
             <x-input-error :messages="$errors->get('subject')" class="mt-2" />
         </div>
 
@@ -43,9 +56,9 @@
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <!-- Start date -->
         <div>
-            <x-input-label for="start_date" value="Start date (optional)" />
+            <x-input-label for="start_date" value="Start date" />
             <x-text-input id="start_date" name="start_date" type="date" class="mt-1 block w-full"
-                          :value="old('start_date', $hw?->start_date?->format('Y-m-d'))" />
+                          :value="old('start_date', $hw?->start_date?->format('Y-m-d'))" required />
             <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
         </div>
 

@@ -9,6 +9,11 @@
 
         <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
 
+        <!-- PWA -->
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <meta name="theme-color" content="#7C3AED">
+        <link rel="apple-touch-icon" href="{{ asset('images/pwa/icon-192.png') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=nunito:300,400,600,700,800&display=swap" rel="stylesheet" />

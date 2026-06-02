@@ -11,6 +11,7 @@
         </div>
 
         <form method="POST" action="{{ route('tutor.messages.store') }}"
+              x-data="spinner('Sending message…')" @submit="start()"
               class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             @csrf
 
@@ -54,6 +55,8 @@
                     Send
                 </button>
             </div>
+
+            <x-spinner-overlay />
         </form>
     </div>
 </x-app-layout>

@@ -10,7 +10,8 @@
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
             <h2 class="mb-6 text-xl font-extrabold text-ink">Add a new student</h2>
 
-            <form method="POST" action="{{ route('tutor.students.store') }}">
+            <form method="POST" action="{{ route('tutor.students.store') }}"
+                  x-data="spinner('Connecting to server…', 'Saving to database…')" @submit="start()">
                 @csrf
                 @include('tutor.students._form', ['student' => null])
 
@@ -18,6 +19,8 @@
                     <a href="{{ route('tutor.students.index') }}" class="text-sm font-semibold text-muted hover:text-ink">Cancel</a>
                     <x-primary-button>Create Student</x-primary-button>
                 </div>
+
+                <x-spinner-overlay />
             </form>
         </div>
     </div>

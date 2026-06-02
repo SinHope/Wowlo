@@ -35,7 +35,14 @@ class MessageController extends Controller
         $data = $request->validated();
         $data['sender_id'] = $request->user()->id;
 
-        Message::create($data);
+        $message = Message::create($data);
+
+        // Best-effort push to the receiver; never break the request.
+        try {
+            $message->receiver?->notify(new \App\Notifications\NewMessageNotification($message));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()->route('tutor.messages.index')
             ->with('status', 'Message sent.');

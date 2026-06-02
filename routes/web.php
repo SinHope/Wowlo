@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Student\FeeController as StudentFeeController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
@@ -37,6 +38,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // PWA web-push subscription register/remove (best-effort enhancement).
+    Route::post('/push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
+    Route::delete('/push/subscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
 });
 
 // Tutor-only area — RoleMiddleware blocks students from every route here.

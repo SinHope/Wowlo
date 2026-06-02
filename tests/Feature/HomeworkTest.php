@@ -43,6 +43,7 @@ it('lets a tutor assign homework with an R2 attachment', function () {
         'subject' => 'Science',
         'description' => 'Read chapter 3.',
         'student_id' => $student->id,
+        'start_date' => now()->toDateString(),
         'due_date' => now()->addDays(5)->toDateString(),
         'attachment' => UploadedFile::fake()->create('worksheet.pdf', 200, 'application/pdf'),
     ])->assertRedirect(route('tutor.homework.index'));

@@ -1,0 +1,31 @@
+{
+    "name": "Wowlo",
+    "short_name": "Wowlo",
+    "description": "Wowlo — tuition homework, messages, fees, exam papers and quizzes in one place.",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#FFFBF5",
+    "theme_color": "#7C3AED",
+    "icons": [
+        {
+            "src": "/images/pwa/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

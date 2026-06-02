@@ -7,6 +7,8 @@
             <p class="text-muted">Here's what's coming up.</p>
         </div>
 
+        @include('partials.push-enable')
+
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <!-- Upcoming homework -->
             <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">

@@ -276,10 +276,42 @@ The flat monthly-fee model is replaced. Tutor bills by **rate/hour × actual hou
   ```
 - **Message template** lists: student, month, each dated lesson line (hours × rate = amount), lessons subtotal, additional charges (if any), outstanding (if any), **grand total**, PayNow number.
 - **The v2.1 §1 #6 monthly-accrual formula is obsolete.** "Total Tuition Fee Due" is now `Σ(rate × hours) + additional charges`.
-- **OPEN DECISION (resolve in Finance slice):** persist lessons/bills (a `lessons` and/or `bills` table → enables history + auto-derived outstanding) **vs** keep the page as an ephemeral calculator with tutor-entered outstanding. Leaning toward persisting, since it replaces the tutor's manual tracking.
+- **RESOLVED (Finance slice): PERSIST bills.** Implemented 5 tables — `tuition_fees` (one `fee_rate_per_hour` per student), `payments`, `bills`, `bill_lines`, `bill_charges`. Outstanding is **never stored**: `App\Services\Ledger` derives it as `Σ(bills.charges_total) − Σ(payments.amount_paid)` (negative = credit/prepaid). Each bill snapshots `outstanding_before` (ledger value at creation) and `grand_total = charges_total + outstanding_before`. `App\Services\BillMessage` is the single source of truth for the WhatsApp text; the create page mirrors it live in Alpine. Server always recomputes the math (never trusts client). Fee page gated by `fee.unlocked` middleware + session flag (password = `config('wowlo.fee_view_password')`, constant-time compare). So "outstanding" is now **auto-derived from real billing history** — when a parent owes from a prior month, it's a positive value that adds to the next grand total.
 
-### C. Build progress
-- ✅ Slice 1 (Foundation) and the App Shell (role-based dashboards + sidebar nav) complete as of 2026-05-31.
+### C. Exam Papers → 3-level hierarchy (supersedes #1/§6.7 "subject/year filter only")
+The original `exam_papers` schema (v2.0 §7: tutor_id, title, subject, year, file_path, remarks) gains a **`level`** column and an **`original_filename`** column, and the UI is organised as a 3-level tree instead of a flat filtered list.
+
+- **Schema add:** `exam_papers.level` (string, e.g. "Primary 4"; nullable in DB but required on upload), `exam_papers.original_filename` (string — the display name; `file_path` stays the R2 object key).
+- **Organisation: Level → Subject → Year.** Both tutor and student pages render nested collapsible accordions (Level contains Subjects contains Year-grouped papers). Only levels/subjects that actually have papers appear. `ExamPaper::groupForDisplay()` builds the nested structure in canonical config order.
+- **Canonical lists in `config/wowlo.php`:** `levels` (Primary 1–6, Secondary 1–5) and `subjects` (27 SG subjects incl. G1–G3 streams, Combined/Pure sciences, IP, etc.). These drive the upload dropdowns, `Rule::in` validation, and grouping order — single source of truth.
+- **Student filters:** Level + Subject + Year dropdowns (each lists only values that have papers). All students download all papers (`Storage::disk('r2')->download`); tutor uploads/deletes.
+- **Dependency:** `@alpinejs/collapse` installed and registered in `resources/js/app.js` for the accordion animation.
+
+### D. Quizzes — exam_type expanded, per-question diagrams, persisted corrections (supersedes v2.0 §9–§12)
+- **`quizzes.exam_type` expanded** from the original 4 (`WA1|MidYear|WA2|EndYear`) to **14**, in `config('wowlo.exam_types')`: the original 4 plus `Quiz`, `PeriodicAssessment`, `TopicEvaluation`, `PSLE`, `PrelimPSLE`, `NLevel`, `PrelimNLevel`, `OLevel`, `PrelimOLevel`, `CompetitionPrep`. Enforced by a Postgres CHECK constraint that is **updated via migration** whenever the list changes (keep config + CHECK in sync).
+- **`quiz_questions` gains `image_path` + `image_name`** — an **optional per-question diagram/attachment** (PDF/JPG/PNG/GIF/WebP, max 10 MB) stored in the private R2 bucket under `quiz-questions/`. Served only through authorised streaming routes (tutor: any; student: only for a quiz assigned to them). Deleting a quiz also deletes its R2 attachments.
+- **`quiz_answers.correction`** (text) — the student's written correction for a wrong answer is **persisted** (the original spec described corrections as on-screen only). Editable any time from the results page.
+- **`quiz_attempts`** has `unique(quiz_id, student_id)` — **one attempt per student per quiz** in MVP; re-submit is blocked once `completed_at` is set (taking it again redirects to results).
+- **Status is derived** (per #5): no attempt = Not Started; `completed_at` null = In Progress; set = Completed.
+- **Auto-marking** happens server-side in a transaction on submit: each `student_answer` is compared to `correct_answer`; blanks count as wrong; `obtained_marks = Σ` of correct questions' marks.
+- **Tutor create form** uses Alpine dynamic question rows with explicit JS field validation, a confirm-before-save modal, and a processing spinner. (Note: the modal's confirm button is a native `type=submit` — calling `form.submit()` from JS hung silently.)
+
+### E. PWA + Web Push (Slice 9 as-built)
+- **Installable PWA:** `public/manifest.json` (standalone, brand colors, icons), `public/sw.js` (minimal — install/activate/fetch passthrough, **no offline cache** in MVP), registered in `resources/js/app.js`. `<link rel="manifest">`, `theme-color`, and `apple-touch-icon` in both `layouts/app` and `layouts/guest`. App icons (192/512/512-maskable) generated from `wowlo_logo.png` via `scripts/make-pwa-icons.php` into `public/images/pwa/`.
+- **One-time install prompt:** `partials/pwa-install.blade.php` — Alpine banner that captures `beforeinstallprompt`; dismissal stored in `localStorage` (`wowlo_pwa_prompt`) so it shows once; hidden if already installed (standalone).
+- **Web push (best-effort, #2):** `laravel-notification-channels/webpush`. `push_subscriptions` table (package migration); `User` uses `HasPushSubscriptions`. VAPID keys in `.env` (generated with `php artisan webpush:vapid`). Subscribe/unsubscribe via `PushSubscriptionController` (`POST`/`DELETE /push/subscribe`, in the `auth` group). Student dashboard shows an "Enable notifications" card (`partials/push-enable.blade.php`) — requests permission, subscribes via `PushManager` using the **public** VAPID key (exposed in a meta tag — safe), POSTs the subscription. VAPID public key + endpoints passed to JS via `<meta>` tags.
+- **Notifications:** `NewHomeworkNotification` + `NewMessageNotification`, deliver only via `WebPushChannel`, fired **synchronously** from `Tutor\HomeworkController@store` (→ assigned student) and `Tutor\MessageController@store` (→ receiver), each wrapped in `try/catch` + `report()` so a push failure never breaks the request. **Push targets students only** (homework/message flow is tutor→student).
+- **Windows/Herd note:** `php artisan webpush:vapid` (and real push *sending* locally) needs `OPENSSL_CONF` pointing at Herd's `openssl.cnf` (`...\bin\php84\extras\ssl\openssl.cnf`) or EC key creation fails. Irrelevant on the Linux deploy. Tests use `Notification::fake()` so they never sign/send.
+
+### F. Homework form hardening (2026-06-02)
+- **All fields required** except the attachment: `title`, `subject`, `description`, `student_id`, **`start_date` (now required, was nullable)**, `due_date`.
+- **Subject is now a dropdown** from `config('wowlo.subjects')` (validated with `Rule::in`), matching Exam Papers/Quizzes. The `_form` partial keeps an existing non-canonical subject selectable so editing never silently changes it.
+- **Two-stage submit spinner** on create ("Connecting to server…" → "Saving to database…"), shown via an `@submit` handler that only fires after native validation passes.
+
+### G. Build progress
+- ✅ **Slices 1–9 complete** as of 2026-06-02: Foundation, App Shell, Auth, Students, Homework (+R2), Messages, Finance, Exam Papers, Quizzes, **PWA + Push**. Plus the PDPA privacy-policy page (Slice 10) done early.
+- **Test count: 104** (Pest feature tests; in-memory SQLite — never touches Neon).
+- **Next: Slice 10 (public landing page — privacy policy already done) → Slice 11 (hardening + deploy to Render + UptimeRobot).**
 
 ---
 

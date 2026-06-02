@@ -36,7 +36,14 @@ class HomeworkController extends Controller
         $data['tutor_id'] = $request->user()->id;
         $data = array_merge($data, $this->handleUpload($request));
 
-        Homework::create($data);
+        $homework = Homework::create($data);
+
+        // Best-effort push to the assigned student; never break the request.
+        try {
+            $homework->student?->notify(new \App\Notifications\NewHomeworkNotification($homework));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()->route('tutor.homework.index')
             ->with('status', 'Homework assigned.');

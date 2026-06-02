@@ -725,14 +725,18 @@ VAPID_SUBJECT=mailto:your@email.com
 
 ### 7. exam_papers Table ✦ Phase 1 MVP (New)
 
+> ⚠️ **As-built: see v2.1 §7.C.** Added `level` (string) and `original_filename` (string); `file_path` is the R2 object key. UI is organised Level → Subject → Year (not a flat subject/year filter).
+
 | Column | Type | Notes |
 |---|---|---|
 | id | Primary Key | Auto-increment |
 | tutor_id | FK → users.id | The tutor who uploaded the paper |
+| level | string | ✦ as-built — e.g. Primary 4 (from `config('wowlo.levels')`) |
 | title | string | e.g. 2023 PSLE Maths Paper 1 |
-| subject | string | e.g. Maths, English, Science |
+| subject | string | e.g. Maths, English, Science (from `config('wowlo.subjects')`) |
 | year | integer | e.g. 2023, 2022 — used for filtering |
-| file_path | string | Path in Laravel storage |
+| file_path | string | R2 object key (as-built; was "Laravel storage") |
+| original_filename | string | ✦ as-built — display name for download |
 | remarks | text (nullable) | Optional notes about the paper |
 | created_at | timestamp | Auto |
 | updated_at | timestamp | Auto |
@@ -770,7 +774,7 @@ VAPID_SUBJECT=mailto:your@email.com
 | subject | string | e.g. Science, Maths, English |
 | level | string | e.g. Primary 4, Primary 5 |
 | topic | string | e.g. Photosynthesis, Fractions |
-| exam_type | enum: WA1\|MidYear\|WA2\|EndYear | Singapore primary school exam schedule |
+| exam_type | string (was enum) | ✦ as-built (v2.1 §7.D): **14 values** in `config('wowlo.exam_types')` — WA1/MidYear/WA2/EndYear + Quiz/PeriodicAssessment/TopicEvaluation/PSLE/PrelimPSLE/NLevel/PrelimNLevel/OLevel/PrelimOLevel/CompetitionPrep. pgsql CHECK kept in sync via migration. |
 | created_at | timestamp | Auto |
 | updated_at | timestamp | Auto |
 
@@ -783,7 +787,9 @@ VAPID_SUBJECT=mailto:your@email.com
 | id | Primary Key | |
 | quiz_id | FK → quizzes.id | |
 | question_text | text | The question |
-| question_type | enum: mcq\|short_answer | Phase 1: mcq only. Phase 2: short_answer |
+| question_type | string (was enum) | Phase 1: mcq only. Phase 2: short_answer |
+| image_path | string (nullable) | ✦ as-built (v2.1 §7.D) — R2 key of optional per-question diagram |
+| image_name | string (nullable) | ✦ as-built — original filename of the diagram |
 | option_a | string (nullable) | MCQ option A |
 | option_b | string (nullable) | MCQ option B |
 | option_c | string (nullable) | MCQ option C |
@@ -820,11 +826,12 @@ VAPID_SUBJECT=mailto:your@email.com
 | is_correct | boolean | MCQ: auto-checked. Short answer: AI-checked (Phase 2) |
 | marks_awarded | integer | 0 or full marks per question |
 | ai_feedback | text (nullable) | Phase 2 only — AI marking explanation |
+| correction | text (nullable) | ✦ as-built (v2.1 §7.D) — student's written correction for a wrong answer (persisted, editable from the results page) |
 | created_at | timestamp | Auto |
 
 > 📌 **Phase 1 — MCQ only:** `is_correct` checked by comparing `student_answer` to `correct_answer` directly. No AI needed.
 > 📌 **Phase 2 — Short Answer:** Send question + correct_answer + student_answer to Google Gemini API (free tier, 1500 calls/day). Fallback: Claude Haiku API (~$0.001 per question).
-> 📌 **Corrections:** After completing quiz, student can review wrong answers on-screen and write corrections.
+> 📌 **Corrections:** After completing quiz, student reviews wrong answers on-screen and writes corrections — **as-built these are saved** to `quiz_answers.correction` (not just on-screen).
 
 ---
 
