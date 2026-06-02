@@ -72,10 +72,10 @@
 
             <!-- Sidebar -->
             <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-                   class="fixed inset-y-0 left-0 z-40 w-64 transform bg-white border-r border-gray-200 transition-transform duration-200 lg:translate-x-0">
-                <div class="flex h-16 items-center gap-2 border-b border-gray-200 px-4">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-                        <img src="{{ asset('images/logo/wowlo_logo.png') }}" alt="Wowlo" class="h-10 w-auto">
+                   class="fixed inset-y-0 left-0 z-40 flex w-64 transform flex-col overflow-y-auto bg-white border-r border-gray-200 transition-transform duration-200 lg:translate-x-0">
+                <div class="flex shrink-0 items-center justify-center border-b border-gray-200 px-4 py-3">
+                    <a href="{{ route('dashboard') }}" class="flex items-center justify-center">
+                        <img src="{{ asset('images/logo/wowlo_logo.png') }}" alt="Wowlo" class="h-40 w-auto">
                     </a>
                 </div>
 
