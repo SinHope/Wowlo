@@ -11,6 +11,15 @@
         <form method="POST" action="{{ route('tutor.quizzes.store') }}" enctype="multipart/form-data" x-data="quizForm()" class="space-y-5">
             @csrf
 
+            {{-- Live validation banner --}}
+            <div x-show="validationError" x-cloak x-transition
+                 class="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3">
+                <svg class="mt-0.5 h-5 w-5 shrink-0 text-danger" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                <p class="text-sm font-semibold text-danger" x-text="validationError"></p>
+            </div>
+
             {{-- Quiz meta --}}
             <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-5">
                 <h2 class="text-xl font-extrabold text-ink">Quiz Details</h2>
@@ -151,13 +160,62 @@
             <div class="flex items-center justify-end gap-3">
                 <a href="{{ route('tutor.quizzes.index') }}"
                    class="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gray-50 cursor-pointer">Cancel</a>
-                <button type="submit"
+                <button type="button" @click="confirmSave()"
                         class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer">
                     Save Quiz
                 </button>
             </div>
+
+            {{-- Confirmation modal --}}
+            <div x-show="confirming" x-cloak
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                 x-transition.opacity>
+                <div class="absolute inset-0 bg-ink/50" @click="confirming = false"></div>
+                <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+                    <div class="flex items-start gap-3">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber/10">
+                            <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <h3 class="text-lg font-bold text-ink">Save this quiz?</h3>
+                            <p class="mt-1 text-sm text-muted">
+                                You won't be able to make any further changes after this. Please double-check your questions and answers.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" @click="confirming = false"
+                                class="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gray-50 cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit" @click="submitting = true"
+                                class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark cursor-pointer">
+                            Yes, save quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Processing spinner overlay --}}
+            <div x-show="submitting" x-cloak
+                 class="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40">
+                <div class="flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-6 shadow-xl">
+                    <svg class="h-8 w-8 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <p class="text-sm font-semibold text-ink">Saving your quiz…</p>
+                </div>
+            </div>
         </form>
     </div>
+
+    <style>[x-cloak]{display:none!important;}</style>
 
     <script>
         function quizForm() {
@@ -190,10 +248,50 @@
 
             return {
                 questions,
+                confirming: false,
+                submitting: false,
+                validationError: '',
                 addQuestion() { this.questions.push(blank()); },
                 removeQuestion(i) { this.questions.splice(i, 1); },
                 get totalMarks() {
                     return this.questions.reduce((sum, q) => sum + (parseInt(q.marks) || 0), 0);
+                },
+                // Helper: read a meta field's current value by element id.
+                metaValue(id) {
+                    const el = document.getElementById(id);
+                    return el ? el.value.trim() : '';
+                },
+                // Block the save and surface a clear message at the top of the form.
+                fail(message) {
+                    this.validationError = message;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return false;
+                },
+                // Validate everything explicitly; only open the confirm modal if all good.
+                confirmSave() {
+                    this.validationError = '';
+
+                    // Quiz details
+                    if (! this.metaValue('title'))     return this.fail('Please enter a quiz title.');
+                    if (! this.metaValue('level'))     return this.fail('Please choose a level.');
+                    if (! this.metaValue('subject'))   return this.fail('Please choose a subject.');
+                    if (! this.metaValue('exam_type')) return this.fail('Please choose an exam type.');
+
+                    // Questions
+                    if (this.questions.length === 0) return this.fail('Add at least one question.');
+
+                    for (let i = 0; i < this.questions.length; i++) {
+                        const q = this.questions[i];
+                        const n = i + 1;
+                        if (! q.question_text.trim())  return this.fail(`Question ${n}: please enter the question.`);
+                        for (const L of ['A', 'B', 'C', 'D']) {
+                            if (! (q.options[L] || '').trim()) return this.fail(`Question ${n}: Option ${L} is empty.`);
+                        }
+                        if (! q.correct_answer)        return this.fail(`Question ${n}: select the correct answer.`);
+                        if (! q.marks || q.marks < 1)  return this.fail(`Question ${n}: marks must be at least 1.`);
+                    }
+
+                    this.confirming = true;
                 },
             };
         }

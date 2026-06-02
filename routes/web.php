@@ -7,6 +7,7 @@ use App\Http\Controllers\Student\FeeController as StudentFeeController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
 use App\Http\Controllers\Student\ExamPaperController as StudentExamPaperController;
+use App\Http\Controllers\Student\QuizController as StudentQuizController;
 use App\Http\Controllers\Tutor\BillController as TutorBillController;
 use App\Http\Controllers\Tutor\ExamPaperController as TutorExamPaperController;
 use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
@@ -106,6 +107,14 @@ Route::middleware(['auth', 'verified', 'role:student'])
         // Exam Papers — all students can browse and download all papers.
         Route::get('exam-papers', [StudentExamPaperController::class, 'index'])->name('exam-papers.index');
         Route::get('exam-papers/{examPaper}/download', [StudentExamPaperController::class, 'download'])->name('exam-papers.download');
+
+        // Quizzes — take assigned quizzes, view results, write corrections.
+        Route::get('quizzes', [StudentQuizController::class, 'index'])->name('quizzes.index');
+        Route::get('quizzes/questions/{question}/image', [StudentQuizController::class, 'questionImage'])->name('quizzes.questions.image');
+        Route::get('quizzes/{quiz}', [StudentQuizController::class, 'show'])->name('quizzes.show');
+        Route::post('quizzes/{quiz}/submit', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
+        Route::get('quizzes/{quiz}/result', [StudentQuizController::class, 'result'])->name('quizzes.result');
+        Route::post('quizzes/{quiz}/corrections', [StudentQuizController::class, 'saveCorrections'])->name('quizzes.corrections');
     });
 
 require __DIR__.'/auth.php';

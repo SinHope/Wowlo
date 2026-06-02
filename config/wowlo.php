@@ -64,6 +64,13 @@ return [
         'Quiz'               => 'Quiz',
         'PeriodicAssessment' => 'Periodic Assessment',
         'TopicEvaluation'    => 'Topic Evaluation',
+        'PSLE'               => 'PSLE',
+        'PrelimPSLE'         => 'Prelim (PSLE)',
+        'NLevel'             => 'N Level',
+        'PrelimNLevel'       => 'Prelim (N Level)',
+        'OLevel'             => 'O Level',
+        'PrelimOLevel'       => 'Prelim (O Level)',
+        'CompetitionPrep'    => 'Competition Preparation',
     ],
 
     /*
