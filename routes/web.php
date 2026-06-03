@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\TutorController as AdminTutorController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -26,6 +28,16 @@ Route::get('/privacy-policy', function () {
     return view('privacy-policy');
 })->name('privacy-policy');
 
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
+// Public "Contact us" page. Submission is rate-limited against spam/abuse.
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [ContactController::class, 'send'])
+    ->middleware('throttle:5,1')
+    ->name('contact.send');
+
 // Google OAuth (login only — accounts are created by the tutor)
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
@@ -44,8 +56,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/push/subscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
 });
 
-// Tutor-only area — RoleMiddleware blocks students from every route here.
-Route::middleware(['auth', 'verified', 'role:tutor'])
+// Super-admin-only area — manage tutor accounts (no public sign-up yet).
+Route::middleware(['auth', 'verified', 'role:super_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('tutors', AdminTutorController::class)->except(['show']);
+    });
+
+// Teaching workspace — tutors AND the super_admin (who teaches their own roster).
+// RoleMiddleware blocks students from every route here.
+Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
     ->prefix('tutor')
     ->name('tutor.')
     ->group(function () {
@@ -56,7 +77,9 @@ Route::middleware(['auth', 'verified', 'role:tutor'])
         Route::get('homework/{homework}/download', [TutorHomeworkController::class, 'download'])->name('homework.download');
         Route::resource('homework', TutorHomeworkController::class)->except(['show']);
 
-        // Messages — tutor composes and views what they've sent (one-way in MVP).
+        // Messages — tutor composes/views what they've sent, plus a received
+        // inbox (e.g. exam-paper approval notices from the super_admin).
+        Route::get('messages/inbox', [TutorMessageController::class, 'inbox'])->name('messages.inbox');
         Route::resource('messages', TutorMessageController::class)->only(['index', 'create', 'store', 'show']);
 
         // Finance — fee setup, record payments, outstanding (per student).
@@ -72,10 +95,13 @@ Route::middleware(['auth', 'verified', 'role:tutor'])
         Route::post('billing', [TutorBillController::class, 'store'])->name('billing.store');
         Route::get('billing/{bill}', [TutorBillController::class, 'show'])->name('billing.show');
 
-        // Exam Papers — upload, list, delete, download.
+        // Exam Papers — SHARED moderated library. Tutors submit (→ pending),
+        // the super_admin approves/rejects; approved papers are visible to all.
         Route::get('exam-papers', [TutorExamPaperController::class, 'index'])->name('exam-papers.index');
         Route::get('exam-papers/create', [TutorExamPaperController::class, 'create'])->name('exam-papers.create');
         Route::post('exam-papers', [TutorExamPaperController::class, 'store'])->name('exam-papers.store');
+        Route::post('exam-papers/{examPaper}/approve', [TutorExamPaperController::class, 'approve'])->name('exam-papers.approve');
+        Route::post('exam-papers/{examPaper}/reject', [TutorExamPaperController::class, 'reject'])->name('exam-papers.reject');
         Route::delete('exam-papers/{examPaper}', [TutorExamPaperController::class, 'destroy'])->name('exam-papers.destroy');
         Route::get('exam-papers/{examPaper}/download', [TutorExamPaperController::class, 'download'])->name('exam-papers.download');
 

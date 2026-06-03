@@ -309,9 +309,24 @@ The original `exam_papers` schema (v2.0 §7: tutor_id, title, subject, year, fil
 - **Two-stage submit spinner** on create ("Connecting to server…" → "Saving to database…"), shown via an `@submit` handler that only fires after native validation passes.
 
 ### G. Build progress
-- ✅ **Slices 1–9 complete** as of 2026-06-02: Foundation, App Shell, Auth, Students, Homework (+R2), Messages, Finance, Exam Papers, Quizzes, **PWA + Push**. Plus the PDPA privacy-policy page (Slice 10) done early.
-- **Test count: 104** (Pest feature tests; in-memory SQLite — never touches Neon).
-- **Next: Slice 10 (public landing page — privacy policy already done) → Slice 11 (hardening + deploy to Render + UptimeRobot).**
+- ✅ **Slices 1–10 complete**: Foundation, App Shell, Auth, Students, Homework (+R2), Messages, Finance, Exam Papers, Quizzes, **PWA + Push**, public landing page + PDPA privacy policy.
+- ✅ **Slice 10.5 — Multi-tutor tenancy (2026-06-03)** — see §H below.
+- **Test count: 119** (Pest feature tests; in-memory SQLite — never touches Neon). Includes `tests/Feature/MultiTutorTest.php` (cross-tutor isolation, admin tutor mgmt, exam-paper approval).
+- **Next: Slice 11 (hardening + deploy to Render + UptimeRobot).**
+
+### H. Multi-tutor tenancy (2026-06-03) — supersedes the single-tutor assumption
+
+The app was built assuming one tutor (`auth()` *was* the tutor). It is now multi-tutor. **Decisions locked in:**
+
+| # | Decision | Choice |
+|---|----------|--------|
+| MT1 | Student ownership | **1 student → 1 tutor** (the creator). No student-shared-across-tutors model. |
+| MT2 | Exam papers | **Shared, moderated library.** Approved papers are global (all tutors + students). A non-admin tutor's upload is `pending`; the super_admin approves (→ live + a Message to the uploader) or rejects (→ deleted + a Message). The super_admin's own uploads auto-approve. |
+| MT3 | Super_admin | The owner **also teaches** their own roster, plus manages tutor accounts and approves papers. Does NOT browse other tutors' students' data (privacy/PDPA). |
+| MT4 | Tutor creation | **Super_admin provisions tutors** at `/admin/tutors`. No public sign-up yet. Deleting a tutor with students is **blocked** (`restrictOnDelete` + a friendly app error). |
+| MT5 | Public tutor sign-up | **Deferred to Phase 2.** Purely additive — a self-registered tutor is structurally identical (`role=tutor, tutor_id=null`), so existing tutors lose nothing when it ships. |
+
+**Architecture.** `users.tutor_id` (nullable FK → users) is the backbone: a student's owning tutor; NULL for tutor/super_admin. Content tables already carried `tutor_id` (homeworks, quizzes, exam_papers, bills); fees/payments/bills/quiz_assignments resolve ownership through the student. The real work was **enforcement**, not schema: every tutor list scopes to `auth()->id()` and every route-bound model is ownership-checked (404). `RoleMiddleware` now accepts a list (`role:tutor,super_admin`). Roles enforced by a widened Postgres CHECK (`student|tutor|super_admin`). `exam_papers` gained `status` (`pending|approved`, default `approved` to backfill), `approved_by`, `approved_at`. Tutors got a received-message **Inbox** (`tutor.messages.inbox`) so approval notices land somewhere. New migrations: `2026_06_03_000000/000010/000020`. Pre-existing orphaned students were backfilled to the super_admin.
 
 ---
 

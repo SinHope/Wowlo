@@ -27,7 +27,9 @@
     </head>
     <body class="font-sans antialiased text-ink">
         @php
-            $isTutor = auth()->user()->isTutor();
+            $authUser     = auth()->user();
+            $actsAsTutor  = $authUser->actsAsTutor();
+            $isSuperAdmin = $authUser->isSuperAdmin();
 
             // Role-based menu. Items without a real route yet point to '#'.
             $icons = [
@@ -43,17 +45,22 @@
                 'user'     => 'M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
             ];
 
-            $menu = $isTutor ? [
+            $menu = $actsAsTutor ? array_values(array_filter([
                 ['label' => 'Dashboard',         'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
+                // Super-admin only: manage tutor accounts.
+                $isSuperAdmin
+                    ? ['label' => 'Tutors',      'icon' => 'users', 'href' => route('admin.tutors.index'), 'active' => request()->routeIs('admin.tutors.*')]
+                    : null,
                 ['label' => 'Students',          'icon' => 'users', 'href' => route('tutor.students.index'), 'active' => request()->routeIs('tutor.students.*')],
                 ['label' => 'Homework',          'icon' => 'book',  'href' => route('tutor.homework.index'), 'active' => request()->routeIs('tutor.homework.index', 'tutor.homework.create', 'tutor.homework.edit')],
                 ['label' => 'Homework Status',   'icon' => 'check', 'href' => route('tutor.homework.status'), 'active' => request()->routeIs('tutor.homework.status')],
-                ['label' => 'Messages',          'icon' => 'mail',  'href' => route('tutor.messages.index'), 'active' => request()->routeIs('tutor.messages.*')],
+                ['label' => 'Messages',          'icon' => 'mail',  'href' => route('tutor.messages.index'), 'active' => request()->routeIs('tutor.messages.index', 'tutor.messages.create', 'tutor.messages.show')],
+                ['label' => 'Inbox',             'icon' => 'chat',  'href' => route('tutor.messages.inbox'), 'active' => request()->routeIs('tutor.messages.inbox'), 'badge' => $authUser->receivedMessages()->where('is_read', false)->count()],
                 ['label' => 'Finance',           'icon' => 'money', 'href' => route('tutor.finance.index'), 'active' => request()->routeIs('tutor.finance.*')],
                 ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => route('tutor.billing.index'), 'active' => request()->routeIs('tutor.billing.*')],
                 ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => route('tutor.exam-papers.index'), 'active' => request()->routeIs('tutor.exam-papers.*')],
                 ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => route('tutor.quizzes.index'), 'active' => request()->routeIs('tutor.quizzes.*')],
-            ] : [
+            ])) : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
                 ['label' => 'Messages',      'icon' => 'mail',  'href' => route('student.messages.index'), 'active' => request()->routeIs('student.messages.*'), 'badge' => auth()->user()->receivedMessages()->where('is_read', false)->count()],

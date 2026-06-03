@@ -11,19 +11,84 @@
             </div>
         @endif
 
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between"
+             x-data="spinner('Loading…')">
             <div>
                 <h2 class="text-2xl font-extrabold text-ink">Exam Papers</h2>
-                <p class="text-muted">{{ $total }} uploaded · {{ $grouped->count() }} {{ Str::plural('level', $grouped->count()) }}</p>
+                <p class="text-muted">
+                    Shared library · {{ $total }} approved {{ Str::plural('paper', $total) }} · {{ $grouped->count() }} {{ Str::plural('level', $grouped->count()) }}
+                </p>
             </div>
-            <a href="{{ route('tutor.exam-papers.create') }}"
+            <a href="{{ route('tutor.exam-papers.create') }}" @click="start()"
                class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 Upload Paper
             </a>
+            <x-spinner-overlay />
         </div>
+
+        {{-- Pending submissions: the super_admin's approval queue, or a tutor's
+             own "awaiting approval" list. --}}
+        @if ($pending->isNotEmpty())
+            <div class="overflow-hidden rounded-2xl border border-amber-300 bg-amber-50 shadow-sm">
+                <div class="border-b border-amber-200 bg-amber-100 px-5 py-3">
+                    <h3 class="text-sm font-extrabold uppercase tracking-wide text-amber-700">
+                        {{ $isSuperAdmin ? 'Pending approval (' . $pending->count() . ')' : 'Your submissions awaiting approval' }}
+                    </h3>
+                    @if ($isSuperAdmin)
+                        <p class="text-xs text-amber-700/80">Submitted by other tutors — approve to add to the shared library.</p>
+                    @else
+                        <p class="text-xs text-amber-700/80">The admin will review these. You'll get an Inbox message once approved.</p>
+                    @endif
+                </div>
+                <div class="divide-y divide-amber-100">
+                    @foreach ($pending as $paper)
+                        <div class="flex flex-wrap items-center gap-3 px-5 py-3">
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold text-ink">{{ $paper->title }}</p>
+                                <p class="truncate text-xs text-muted">
+                                    {{ $paper->level }} · {{ $paper->subject }} · {{ $paper->year }}
+                                    @if ($isSuperAdmin) · by {{ $paper->tutor?->name ?? 'Unknown' }} @endif
+                                </p>
+                            </div>
+                            <a href="{{ route('tutor.exam-papers.download', $paper) }}"
+                               class="inline-flex items-center gap-1 rounded-md border border-primary/30 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 cursor-pointer">
+                                Download
+                            </a>
+                            @if ($isSuperAdmin)
+                                <form method="POST" action="{{ route('tutor.exam-papers.approve', $paper) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 rounded-md bg-success px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:opacity-90 cursor-pointer">
+                                        Approve
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('tutor.exam-papers.reject', $paper) }}"
+                                      onsubmit="return confirm('Reject and delete this submission? The tutor will be notified.')">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 rounded-md border border-danger/30 px-2.5 py-1 text-xs font-semibold text-danger transition-colors hover:bg-danger/5 cursor-pointer">
+                                        Reject
+                                    </button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('tutor.exam-papers.destroy', $paper) }}"
+                                      onsubmit="return confirm('Withdraw this submission?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1 rounded-md border border-danger/30 px-2.5 py-1 text-xs font-semibold text-danger transition-colors hover:bg-danger/5 cursor-pointer">
+                                        Withdraw
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @forelse ($grouped as $level => $subjects)
             <div x-data="{ open: true }" class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
@@ -81,8 +146,9 @@
                                                             </svg>
                                                             Download
                                                         </a>
+                                                        @if ($isSuperAdmin)
                                                         <form method="POST" action="{{ route('tutor.exam-papers.destroy', $paper) }}"
-                                                              onsubmit="return confirm('Delete this exam paper? This cannot be undone.')">
+                                                              onsubmit="return confirm('Delete this exam paper from the shared library? This cannot be undone.')">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
@@ -93,6 +159,7 @@
                                                                 Delete
                                                             </button>
                                                         </form>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach

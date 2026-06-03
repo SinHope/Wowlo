@@ -152,8 +152,8 @@ it('deletes question attachments from R2 when the quiz is deleted', function () 
 
 it('lets a tutor assign a quiz to students and re-sync the set', function () {
     $tutor = tutor();
-    $a = student();
-    $b = student();
+    $a = student(['tutor_id' => $tutor->id]);
+    $b = student(['tutor_id' => $tutor->id]);
 
     $quiz = Quiz::create([
         'tutor_id' => $tutor->id, 'title' => 'Q', 'level' => 'Primary 4',
@@ -179,7 +179,7 @@ it('lets a tutor assign a quiz to students and re-sync the set', function () {
 
 it('does not duplicate an assignment when assigned twice', function () {
     $tutor = tutor();
-    $s = student();
+    $s = student(['tutor_id' => $tutor->id]);
     $quiz = Quiz::create([
         'tutor_id' => $tutor->id, 'title' => 'Q', 'level' => 'Primary 4',
         'subject' => 'Science', 'exam_type' => 'WA1',
@@ -193,7 +193,7 @@ it('does not duplicate an assignment when assigned twice', function () {
 
 it('cascade-deletes questions and assignments when a quiz is deleted', function () {
     $tutor = tutor();
-    $s = student();
+    $s = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.quizzes.store'), quizPayload());
     $quiz = Quiz::firstWhere('title', 'P4 Science WA1 Chapter 3');

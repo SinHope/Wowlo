@@ -11,9 +11,9 @@ use App\Services\Ledger;
  * persistence of lines/charges, grand total, and the outstanding snapshot.
  */
 
-function studentWithRate(float $rate): User
+function studentWithRate(float $rate, ?User $tutor = null): User
 {
-    $student = student();
+    $student = student($tutor ? ['tutor_id' => $tutor->id] : []);
     TuitionFee::create([
         'student_id' => $student->id,
         'fee_rate_per_hour' => $rate,
@@ -31,7 +31,7 @@ it('forbids a student from the billing area', function () {
 
 it('computes each lesson as rate × hours with varying hours', function () {
     $tutor = tutor();
-    $student = studentWithRate(50);
+    $student = studentWithRate(50, $tutor);
 
     $this->actingAs($tutor)->post(route('tutor.billing.store'), [
         'student_id' => $student->id,
@@ -59,7 +59,7 @@ it('computes each lesson as rate × hours with varying hours', function () {
 
 it('snapshots prior outstanding onto the new bill and folds it into the grand total', function () {
     $tutor = tutor();
-    $student = studentWithRate(40);
+    $student = studentWithRate(40, $tutor);
 
     // Establish a prior balance: billed 200, paid 50 → outstanding 150.
     Bill::create([
@@ -92,7 +92,7 @@ it('snapshots prior outstanding onto the new bill and folds it into the grand to
 
 it('rejects billing a student with no rate set', function () {
     $tutor = tutor();
-    $student = student(); // no TuitionFee
+    $student = student(['tutor_id' => $tutor->id]); // owned, but no TuitionFee
 
     $this->actingAs($tutor)->post(route('tutor.billing.store'), [
         'student_id' => $student->id,
@@ -127,7 +127,7 @@ it('rejects a bill for a non-student', function () {
 
 it('drops empty additional-charge rows', function () {
     $tutor = tutor();
-    $student = studentWithRate(50);
+    $student = studentWithRate(50, $tutor);
 
     $this->actingAs($tutor)->post(route('tutor.billing.store'), [
         'student_id' => $student->id,

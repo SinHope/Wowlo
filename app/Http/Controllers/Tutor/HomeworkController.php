@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Tutor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HomeworkRequest;
 use App\Models\Homework;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +15,9 @@ class HomeworkController extends Controller
 {
     public function index(): View
     {
-        $homework = Homework::with('student')
+        // Tenancy: only homework this teacher created.
+        $homework = Homework::where('tutor_id', auth()->id())
+            ->with('student')
             ->latest('created_at')
             ->paginate(15);
 
@@ -33,6 +34,8 @@ class HomeworkController extends Controller
     public function store(HomeworkRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        // Tenancy: the assignee must be one of this teacher's own students.
+        $request->user()->students()->findOrFail($data['student_id']);
         $data['tutor_id'] = $request->user()->id;
         $data = array_merge($data, $this->handleUpload($request));
 
@@ -51,6 +54,8 @@ class HomeworkController extends Controller
 
     public function edit(Homework $homework): View
     {
+        $this->ensureOwned($homework);
+
         return view('tutor.homework.edit', [
             'homework' => $homework,
             'students' => $this->students(),
@@ -59,7 +64,11 @@ class HomeworkController extends Controller
 
     public function update(HomeworkRequest $request, Homework $homework): RedirectResponse
     {
+        $this->ensureOwned($homework);
+
         $data = $request->validated();
+        // If the assignee is being changed, it must still be one of this teacher's students.
+        $request->user()->students()->findOrFail($data['student_id']);
 
         if ($request->hasFile('attachment')) {
             $this->deleteAttachment($homework);
@@ -76,6 +85,8 @@ class HomeworkController extends Controller
 
     public function destroy(Homework $homework): RedirectResponse
     {
+        $this->ensureOwned($homework);
+
         $this->deleteAttachment($homework);
         $homework->delete();
 
@@ -91,29 +102,39 @@ class HomeworkController extends Controller
         $students = $this->students();
         $selectedId = $request->integer('student_id') ?: null;
 
+        // Tenancy: only this teacher's own homework, for their own students.
         $homework = $selectedId
-            ? Homework::where('student_id', $selectedId)->latest('due_date')->get()
+            ? Homework::where('tutor_id', auth()->id())->where('student_id', $selectedId)->latest('due_date')->get()
             : collect();
 
         return view('tutor.homework.status', compact('students', 'selectedId', 'homework'));
     }
 
     /**
-     * Stream an attachment from R2 (tutor can access any).
+     * Stream an attachment from R2 (only the owning teacher's homework).
      */
     public function download(Homework $homework): StreamedResponse
     {
+        $this->ensureOwned($homework);
         abort_unless($homework->hasAttachment(), 404);
 
         return Storage::disk('r2')->download($homework->attachment_path, $homework->attachment_name);
     }
 
     /**
-     * All student accounts for the assignee dropdown.
+     * This teacher's own students for the assignee dropdown.
      */
     private function students()
     {
-        return User::where('role', 'student')->orderBy('name')->get(['id', 'name']);
+        return auth()->user()->students()->orderBy('name')->get(['id', 'name']);
+    }
+
+    /**
+     * Guard: the homework must belong to the acting teacher.
+     */
+    private function ensureOwned(Homework $homework): void
+    {
+        abort_unless($homework->tutor_id === auth()->id(), 404);
     }
 
     /**

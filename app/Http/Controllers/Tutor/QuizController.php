@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\QuizRequest;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +18,8 @@ class QuizController extends Controller
 {
     public function index(): View
     {
-        $quizzes = Quiz::withCount(['questions', 'assignments', 'attempts'])
+        $quizzes = Quiz::where('tutor_id', auth()->id())
+            ->withCount(['questions', 'assignments', 'attempts'])
             ->latest('id')
             ->paginate(15);
 
@@ -81,9 +81,11 @@ class QuizController extends Controller
 
     public function show(Quiz $quiz): View
     {
+        $this->ensureOwned($quiz);
+
         $quiz->load(['questions', 'attempts.student']);
 
-        $students = User::where('role', 'student')->orderBy('name')->get(['id', 'name']);
+        $students = auth()->user()->students()->orderBy('name')->get(['id', 'name']);
         $assignedIds = $quiz->assignments()->pluck('student_id')->all();
 
         return view('tutor.quizzes.show', compact('quiz', 'students', 'assignedIds'));
@@ -94,9 +96,12 @@ class QuizController extends Controller
      */
     public function assign(Request $request, Quiz $quiz): RedirectResponse
     {
+        $this->ensureOwned($quiz);
+
         $validated = $request->validate([
             'student_ids'   => ['array'],
-            'student_ids.*' => [Rule::exists('users', 'id')->where('role', 'student')],
+            // Tenancy: may only assign to this teacher's own students.
+            'student_ids.*' => [Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', 'student')->where('tutor_id', auth()->id()))],
         ]);
 
         $ids = $validated['student_ids'] ?? [];
@@ -119,6 +124,8 @@ class QuizController extends Controller
 
     public function destroy(Quiz $quiz): RedirectResponse
     {
+        $this->ensureOwned($quiz);
+
         // Remove any question attachments from R2 before the DB rows cascade away.
         $keys = $quiz->questions()->whereNotNull('image_path')->pluck('image_path')->all();
         if ($keys) {
@@ -136,8 +143,18 @@ class QuizController extends Controller
      */
     public function questionImage(QuizQuestion $question): StreamedResponse
     {
+        // Tenancy: the question's quiz must belong to the acting teacher.
+        abort_unless($question->quiz->tutor_id === auth()->id(), 404);
         abort_unless($question->hasImage(), 404);
 
         return Storage::disk('r2')->response($question->image_path, $question->image_name);
+    }
+
+    /**
+     * Guard: the quiz must belong to the acting teacher.
+     */
+    private function ensureOwned(Quiz $quiz): void
+    {
+        abort_unless($quiz->tutor_id === auth()->id(), 404);
     }
 }

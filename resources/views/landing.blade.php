@@ -20,6 +20,21 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Brand entity (Knowledge Graph / branded search). Homepage = entity home.
+         Built via json_encode so Blade never parses the @-prefixed keys as directives. --}}
+    <script type="application/ld+json">
+        @php echo json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            '@id' => url('/').'/#organization',
+            'name' => 'Wowlo',
+            'url' => url('/'),
+            'logo' => asset('images/logo/wowlo_logo.png'),
+            'description' => 'Wowlo is a tuition-management app built in Singapore that brings homework, messages, tuition fees, past-year papers and quizzes together in one place for tutors, students and parents.',
+            'areaServed' => ['@type' => 'Country', 'name' => 'Singapore'],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); @endphp
+    </script>
+
     {{-- Spline web component (framework-agnostic — no React/build needed). Pinned for stability. --}}
     <script type="module" src="https://unpkg.com/@splinetool/viewer@1.12.96/build/spline-viewer.js"></script>
 
@@ -58,17 +73,21 @@
             <a href="{{ url('/') }}" class="flex items-center gap-2">
                 <img src="{{ asset('images/logo/wowlo_logo.png') }}" alt="Wowlo" class="h-20 w-auto">
             </a>
-            @auth
-                <a href="{{ route('dashboard') }}"
-                   class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
-                    Go to Dashboard
-                </a>
-            @else
-                <a href="{{ route('login') }}"
-                   class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
-                    Log in
-                </a>
-            @endauth
+            <div class="flex items-center gap-4 sm:gap-6">
+                <a href="{{ route('about') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">About</a>
+                <a href="{{ route('contact') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
+                @auth
+                    <a href="{{ route('dashboard') }}"
+                       class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
+                        Go to Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}"
+                       class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
+                        Log in
+                    </a>
+                @endauth
+            </div>
         </nav>
     </header>
 
@@ -143,98 +162,6 @@
         </div>
     </section>
 
-    {{-- ───────── Old hero kept verbatim but disabled (set to @if(true) to restore) ───────── --}}
-    @if (false)
-    {{-- ───────────────────────── Hero ───────────────────────── --}}
-    <section class="relative overflow-hidden px-4 pb-20 pt-28 sm:px-6 sm:pt-36">
-        {{-- decorative accent dots / blobs --}}
-        <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-            <div class="absolute -left-16 top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"></div>
-            <div class="absolute right-0 top-10 h-72 w-72 rounded-full bg-accent/10 blur-3xl"></div>
-            <span class="absolute left-[12%] top-40 h-3 w-3 rounded-full bg-accent"></span>
-            <span class="absolute right-[18%] top-28 h-2.5 w-2.5 rounded-full bg-primary"></span>
-            <span class="absolute left-[55%] top-20 h-2 w-2 rounded-full bg-primary-light"></span>
-        </div>
-
-        <div class="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
-            {{-- copy --}}
-            <div class="reveal text-center lg:text-left">
-                <span class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-dark">
-                    <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
-                    For my students &amp; parents
-                </span>
-                <h1 class="mt-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-                    Tuition, <span class="text-primary">beautifully organised</span>.
-                </h1>
-                <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted lg:mx-0">
-                    Homework, messages, fees, past-year papers and quizzes — all in one friendly place.
-                    Log in with the account your tutor set up for you.
-                </p>
-                <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
-                    @auth
-                        <a href="{{ route('dashboard') }}"
-                           class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-colors duration-200 hover:bg-primary-dark cursor-pointer sm:w-auto">
-                            Go to Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}"
-                           class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-colors duration-200 hover:bg-primary-dark cursor-pointer sm:w-auto">
-                            Log in to Wowlo
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
-                        </a>
-                    @endauth
-                    <a href="#features"
-                       class="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-3.5 text-base font-bold text-ink transition-colors duration-200 hover:bg-gray-50 cursor-pointer sm:w-auto">
-                        See what's inside
-                    </a>
-                </div>
-                <p class="mt-4 text-sm text-muted">No sign-up needed — your tutor creates your account.</p>
-            </div>
-
-            {{-- app preview mock --}}
-            <div class="reveal relative mx-auto w-full max-w-md">
-                <div class="absolute -right-4 -top-4 h-24 w-24 rounded-2xl bg-accent/20"></div>
-                <div class="absolute -bottom-5 -left-5 h-20 w-20 rounded-full bg-primary/15"></div>
-
-                <div class="relative rounded-3xl border border-gray-100 bg-white p-5 shadow-xl">
-                    {{-- mock: today's homework --}}
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm font-bold text-ink">Today</p>
-                        <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary-dark">Wowlo</span>
-                    </div>
-                    <div class="mt-3 space-y-2.5">
-                        <div class="flex items-center gap-3 rounded-xl border border-gray-100 p-3">
-                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-bold text-ink">Science — Photosynthesis</p>
-                                <p class="text-xs text-muted">Due Friday</p>
-                            </div>
-                            <span class="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-bold text-accent-dark">Pending</span>
-                        </div>
-                        <div class="flex items-center gap-3 rounded-xl border border-gray-100 p-3">
-                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-success/10 text-success">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-bold text-ink">Maths Quiz — WA1</p>
-                                <p class="text-xs text-muted">Scored 9 / 10</p>
-                            </div>
-                            <span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-bold text-success">Done</span>
-                        </div>
-                        <div class="flex items-center gap-3 rounded-xl bg-primary px-3 py-3 text-white">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z" /></svg>
-                            <p class="flex-1 text-sm font-bold">New message from your tutor</p>
-                            <span class="h-2 w-2 rounded-full bg-white"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    @endif
-    {{-- ───────── end disabled old hero ───────── --}}
 
     {{-- ───────────────────────── Trust band ───────────────────────── --}}
     <section class="border-y border-gray-100 bg-white">
@@ -358,7 +285,9 @@
                 <img src="{{ asset('images/logo/wowlo_logo.png') }}" alt="Wowlo" class="h-40 w-auto">
             </div>
             <nav class="flex items-center gap-6 text-sm font-semibold text-muted">
+                <a href="{{ route('about') }}" class="transition-colors hover:text-primary-dark cursor-pointer">About</a>
                 <a href="{{ route('privacy-policy') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Privacy Policy</a>
+                <a href="{{ route('contact') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
                 <a href="{{ route('login') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Log in</a>
             </nav>
             <p class="text-sm text-muted">&copy; {{ date('Y') }} Wowlo. All rights reserved.</p>

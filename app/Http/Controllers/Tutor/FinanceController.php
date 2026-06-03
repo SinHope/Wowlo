@@ -18,7 +18,7 @@ class FinanceController extends Controller
      */
     public function index(): View
     {
-        $students = User::where('role', 'student')
+        $students = auth()->user()->students()
             ->with(['tuitionFee'])
             ->orderBy('name')
             ->get()
@@ -86,6 +86,9 @@ class FinanceController extends Controller
      */
     public function destroyPayment(Payment $payment): RedirectResponse
     {
+        // Tenancy: the payment's student must belong to the acting teacher.
+        $this->ensureStudent($payment->student);
+
         $studentId = $payment->student_id;
         $payment->delete();
 
@@ -94,8 +97,11 @@ class FinanceController extends Controller
             ->with('status', 'Payment deleted.');
     }
 
-    private function ensureStudent(User $student): void
+    /**
+     * Guard: a student owned by the acting teacher. 404 hides other rosters.
+     */
+    private function ensureStudent(?User $student): void
     {
-        abort_unless($student->isStudent(), 404);
+        abort_unless($student && $student->isStudent() && $student->tutor_id === auth()->id(), 404);
     }
 }

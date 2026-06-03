@@ -6,10 +6,18 @@
 
             <div class="mb-6">
                 <h2 class="text-xl font-extrabold text-ink">Upload Exam Paper</h2>
-                <p class="mt-1 text-sm text-muted">PDF or image, max 10 MB. All students can download once uploaded.</p>
+                <p class="mt-1 text-sm text-muted">
+                    PDF or image, max 10 MB.
+                    @if ($isSuperAdmin)
+                        Goes live in the shared library immediately.
+                    @else
+                        It's sent to the admin for approval before it joins the shared library.
+                    @endif
+                </p>
             </div>
 
-            <form method="POST" action="{{ route('tutor.exam-papers.store') }}" enctype="multipart/form-data" class="space-y-5">
+            <form method="POST" action="{{ route('tutor.exam-papers.store') }}" enctype="multipart/form-data" class="space-y-5"
+                  x-data="spinner('Connecting to server…')" @submit="start()">
                 @csrf
 
                 {{-- Title --}}
@@ -87,9 +95,11 @@
                     </a>
                     <button type="submit"
                             class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark cursor-pointer">
-                        Upload
+                        {{ $isSuperAdmin ? 'Upload' : 'Send for approval' }}
                     </button>
                 </div>
+
+                <x-spinner-overlay />
             </form>
         </div>
     </div>

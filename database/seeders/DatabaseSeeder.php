@@ -15,24 +15,48 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // The first tutor/admin account. Google login will link to this on first use.
-        User::updateOrCreate(
+        // The platform owner. Super_admin teaches their own roster AND manages
+        // tutor accounts + approves shared exam papers. Google login links here.
+        $superAdmin = User::updateOrCreate(
             ['email' => 'nasmerfontanilla@gmail.com'],
             [
-                'name' => 'Nas (Tutor)',
+                'name' => 'Nas (Admin)',
                 'password' => 'password',   // change after first login
+                'role' => 'super_admin',
+            ]
+        );
+
+        // A second tutor (e.g. a friend invited to test) — proves isolation:
+        // this tutor must never see the super_admin's students, and vice versa.
+        $friendTutor = User::updateOrCreate(
+            ['email' => 'tutor@wowlo.test'],
+            [
+                'name' => 'Sample Tutor',
+                'password' => 'password',
                 'role' => 'tutor',
             ]
         );
 
-        // A sample student account for testing the student side later.
+        // Each teacher gets one student, owned via tutor_id.
         User::updateOrCreate(
             ['email' => 'student@wowlo.test'],
             [
-                'name' => 'Sample Student',
+                'name' => 'Sample Student (Nas)',
                 'password' => 'password',
                 'role' => 'student',
+                'tutor_id' => $superAdmin->id,
                 'phone_1' => '90000000',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'student2@wowlo.test'],
+            [
+                'name' => "Sample Student (Tutor)",
+                'password' => 'password',
+                'role' => 'student',
+                'tutor_id' => $friendTutor->id,
+                'phone_1' => '90000001',
             ]
         );
     }

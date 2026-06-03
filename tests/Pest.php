@@ -49,6 +49,15 @@ function tutor(array $attrs = []): \App\Models\User
     return \App\Models\User::factory()->create(array_merge(['role' => 'tutor'], $attrs));
 }
 
+function superAdmin(array $attrs = []): \App\Models\User
+{
+    return \App\Models\User::factory()->create(array_merge(['role' => 'super_admin'], $attrs));
+}
+
+/**
+ * A student. Pass ['tutor_id' => $tutor->id] to place them on a tutor's roster
+ * (required for any tutor action that touches the student — tenancy).
+ */
 function student(array $attrs = []): \App\Models\User
 {
     return \App\Models\User::factory()->create(array_merge(['role' => 'student'], $attrs));

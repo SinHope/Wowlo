@@ -17,7 +17,9 @@ class ExamPaperController extends Controller
         $subject = $request->input('subject');
         $year    = $request->integer('year') ?: null;
 
-        $papers = ExamPaper::whereNotNull('level')
+        // Shared library: students only ever see APPROVED papers.
+        $papers = ExamPaper::approved()
+            ->whereNotNull('level')
             ->when($level, fn ($q) => $q->where('level', $level))
             ->when($subject, fn ($q) => $q->where('subject', $subject))
             ->when($year, fn ($q) => $q->where('year', $year))
@@ -27,14 +29,14 @@ class ExamPaperController extends Controller
 
         $grouped = ExamPaper::groupForDisplay($papers);
 
-        // Filter dropdowns: only levels/subjects/years that actually have papers.
+        // Filter dropdowns: only levels/subjects/years that have approved papers.
         $levels = collect(config('wowlo.levels'))
-            ->filter(fn ($l) => ExamPaper::where('level', $l)->exists())
+            ->filter(fn ($l) => ExamPaper::approved()->where('level', $l)->exists())
             ->values();
         $subjects = collect(config('wowlo.subjects'))
-            ->filter(fn ($s) => ExamPaper::where('subject', $s)->exists())
+            ->filter(fn ($s) => ExamPaper::approved()->where('subject', $s)->exists())
             ->values();
-        $years = ExamPaper::whereNotNull('level')->distinct()->orderByDesc('year')->pluck('year');
+        $years = ExamPaper::approved()->whereNotNull('level')->distinct()->orderByDesc('year')->pluck('year');
 
         return view('student.exam-papers.index', [
             'grouped'  => $grouped,
@@ -50,6 +52,9 @@ class ExamPaperController extends Controller
 
     public function download(ExamPaper $examPaper): StreamedResponse
     {
+        // Students may only download approved papers from the shared library.
+        abort_unless($examPaper->isApproved(), 404);
+
         return Storage::disk('r2')->download($examPaper->file_path, $examPaper->original_filename);
     }
 }

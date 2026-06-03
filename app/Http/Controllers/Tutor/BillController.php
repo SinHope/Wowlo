@@ -20,7 +20,8 @@ class BillController extends Controller
      */
     public function index(): View
     {
-        $bills = Bill::with('student')
+        $bills = Bill::where('tutor_id', auth()->id())
+            ->with('student')
             ->latest('billing_month')
             ->latest('id')
             ->paginate(15);
@@ -34,7 +35,7 @@ class BillController extends Controller
      */
     public function create(): View
     {
-        $students = User::where('role', 'student')
+        $students = auth()->user()->students()
             ->with('tuitionFee')
             ->orderBy('name')
             ->get()
@@ -61,7 +62,8 @@ class BillController extends Controller
     public function store(BillRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $student = User::findOrFail($data['student_id']);
+        // Tenancy: can only bill one of this teacher's own students.
+        $student = $request->user()->students()->findOrFail($data['student_id']);
 
         $fee = $student->tuitionFee;
         if (! $fee) {
@@ -128,6 +130,9 @@ class BillController extends Controller
      */
     public function show(Bill $bill): View
     {
+        // Tenancy: only the teacher who issued this bill may view it.
+        abort_unless($bill->tutor_id === auth()->id(), 404);
+
         $bill->load(['student', 'lines', 'charges']);
 
         return view('tutor.billing.show', [

@@ -31,7 +31,7 @@ it('forbids a tutor from the student inbox', function () {
 
 it('lets a tutor send a message to a student', function () {
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.messages.store'), [
         'receiver_id' => $student->id,

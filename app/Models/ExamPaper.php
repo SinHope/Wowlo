@@ -12,11 +12,49 @@ class ExamPaper extends Model
     protected $fillable = [
         'tutor_id', 'level', 'title', 'subject', 'year',
         'file_path', 'original_filename', 'remarks',
+        'status', 'approved_by', 'approved_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'approved_at' => 'datetime',
+        ];
+    }
 
     public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tutor_id');
+    }
+
+    /**
+     * The super_admin who approved this paper (null while pending).
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /** @param \Illuminate\Database\Eloquent\Builder $query */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    /** @param \Illuminate\Database\Eloquent\Builder $query */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 
     /**

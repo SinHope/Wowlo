@@ -15,7 +15,8 @@ class StudentController extends Controller
      */
     public function index(): View
     {
-        $students = User::where('role', 'student')
+        // Tenancy: only this teacher's own roster.
+        $students = auth()->user()->students()
             ->orderBy('name')
             ->paginate(15);
 
@@ -37,6 +38,8 @@ class StudentController extends Controller
     {
         $data = $request->validated();
         $data['role'] = 'student';
+        // Tenancy: stamp ownership server-side — never from client input.
+        $data['tutor_id'] = auth()->id();
         // 'password' is hashed automatically by the User model's 'hashed' cast.
 
         User::create($data);
@@ -50,7 +53,7 @@ class StudentController extends Controller
      */
     public function edit(User $student): View
     {
-        abort_unless($student->isStudent(), 404);
+        $this->ensureOwned($student);
 
         return view('tutor.students.edit', compact('student'));
     }
@@ -60,7 +63,7 @@ class StudentController extends Controller
      */
     public function update(StudentRequest $request, User $student): RedirectResponse
     {
-        abort_unless($student->isStudent(), 404);
+        $this->ensureOwned($student);
 
         $data = $request->validated();
 
@@ -80,11 +83,20 @@ class StudentController extends Controller
      */
     public function destroy(User $student): RedirectResponse
     {
-        abort_unless($student->isStudent(), 404);
+        $this->ensureOwned($student);
 
         $student->delete();
 
         return redirect()->route('tutor.students.index')
             ->with('status', 'Student deleted.');
+    }
+
+    /**
+     * Guard: the bound user must be a student owned by the acting teacher.
+     * 404 (not 403) so we never reveal another tutor's student IDs exist.
+     */
+    private function ensureOwned(User $student): void
+    {
+        abort_unless($student->isStudent() && $student->tutor_id === auth()->id(), 404);
     }
 }

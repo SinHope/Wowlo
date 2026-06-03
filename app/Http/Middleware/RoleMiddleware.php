@@ -9,14 +9,18 @@ use Symfony\Component\HttpFoundation\Response;
 class RoleMiddleware
 {
     /**
-     * Ensure the authenticated user has the required role.
+     * Ensure the authenticated user has ONE OF the required roles.
      *
-     * Usage in routes:  ->middleware('role:tutor')  or  ->middleware('role:student')
+     * Usage in routes:
+     *   ->middleware('role:student')              — students only
+     *   ->middleware('role:tutor,super_admin')    — the teaching workspace
+     *   ->middleware('role:super_admin')          — admin-only area
+     *
      * Prevents URL hacking — a student cannot reach tutor routes and vice versa.
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (! $request->user() || $request->user()->role !== $role) {
+        if (! $request->user() || ! in_array($request->user()->role, $roles, true)) {
             abort(403, 'You do not have permission to access this page.');
         }
 

@@ -66,7 +66,7 @@ it('notifies the assigned student when homework is created', function () {
     Storage::fake('r2');
 
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.homework.store'), [
         'title' => 'Read chapter 4',
@@ -84,7 +84,7 @@ it('notifies the receiver when a message is sent', function () {
     Notification::fake();
 
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.messages.store'), [
         'receiver_id' => $student->id,
@@ -100,7 +100,7 @@ it('does not notify anyone other than the assigned student', function () {
     Storage::fake('r2');
 
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
     $bystander = student();
 
     $this->actingAs($tutor)->post(route('tutor.homework.store'), [
@@ -119,7 +119,7 @@ it('still creates the homework even if the push notification throws', function (
     Notification::shouldReceive('send')->andThrow(new \RuntimeException('push down'));
 
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.homework.store'), [
         'title' => 'Resilient HW', 'subject' => 'Science', 'description' => 'Y',

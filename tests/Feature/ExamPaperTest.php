@@ -143,16 +143,27 @@ it('lets a student download an exam paper', function () {
         ->assertOk();
 });
 
-it('lets a tutor delete an exam paper and removes the file from R2', function () {
+it('lets the super_admin delete a shared exam paper and removes the file from R2', function () {
     Storage::fake('r2');
     Storage::disk('r2')->put('exam-papers/delete-me.pdf', 'content');
 
-    $paper = makePaper(['file_path' => 'exam-papers/delete-me.pdf']);
+    $paper = makePaper(['file_path' => 'exam-papers/delete-me.pdf']); // approved by default
 
-    $this->actingAs(tutor())
+    $this->actingAs(superAdmin())
         ->delete(route('tutor.exam-papers.destroy', $paper))
         ->assertRedirect(route('tutor.exam-papers.index'));
 
     expect(ExamPaper::find($paper->id))->toBeNull();
     Storage::disk('r2')->assertMissing('exam-papers/delete-me.pdf');
+});
+
+it('forbids a regular tutor from deleting another tutor\'s shared paper', function () {
+    Storage::fake('r2');
+    $paper = makePaper(['tutor_id' => tutor()->id]); // approved, owned by someone else
+
+    $this->actingAs(tutor())
+        ->delete(route('tutor.exam-papers.destroy', $paper))
+        ->assertNotFound();
+
+    expect(ExamPaper::find($paper->id))->not->toBeNull();
 });

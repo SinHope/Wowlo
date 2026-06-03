@@ -29,6 +29,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Contact inbox
+    |--------------------------------------------------------------------------
+    | Where the public "Contact us" form delivers messages. Defaults to the
+    | owner's email; override per-environment with CONTACT_EMAIL in .env.
+    */
+    'contact_email' => env('CONTACT_EMAIL', 'nasmerfontanilla@gmail.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Levels
     |--------------------------------------------------------------------------
     | Canonical list of school levels. Exam papers are organised first by

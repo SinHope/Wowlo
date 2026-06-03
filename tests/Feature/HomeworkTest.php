@@ -36,7 +36,7 @@ it('forbids a tutor from the student homework area', function () {
 it('lets a tutor assign homework with an R2 attachment', function () {
     Storage::fake('r2');
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)->post(route('tutor.homework.store'), [
         'title' => 'Science reading',

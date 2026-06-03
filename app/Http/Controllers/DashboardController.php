@@ -14,12 +14,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isTutor()) {
+        if ($user->actsAsTutor()) {
+            // Scope every stat to this teacher's own roster (tenancy).
             return view('tutor.dashboard', [
-                'studentCount' => \App\Models\User::where('role', 'student')->count(),
-                'pendingHomework' => \App\Models\Homework::where('status', 'pending')->count(),
-                'recentHomework' => \App\Models\Homework::with('student')->latest()->take(5)->get(),
-                'createdThisWeek' => \App\Models\Homework::where('created_at', '>=', now()->startOfWeek())->count(),
+                'studentCount' => $user->students()->count(),
+                'pendingHomework' => \App\Models\Homework::where('tutor_id', $user->id)->where('status', 'pending')->count(),
+                'recentHomework' => \App\Models\Homework::where('tutor_id', $user->id)->with('student')->latest()->take(5)->get(),
+                'createdThisWeek' => \App\Models\Homework::where('tutor_id', $user->id)->where('created_at', '>=', now()->startOfWeek())->count(),
             ]);
         }
 

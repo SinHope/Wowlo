@@ -17,6 +17,9 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
     'password',
     'google_id',
     'role',
+    // Always set server-side (auth()->id() or null). Request rules never include
+    // it, so validated() strips any client-supplied value before create/update.
+    'tutor_id',
     'phone_1',
     'phone_2',
     'phone_3',
@@ -44,11 +47,29 @@ class User extends Authenticatable
     }
 
     /**
-     * Is this user a tutor/admin?
+     * Is this user strictly a tutor (not the super_admin)?
      */
     public function isTutor(): bool
     {
         return $this->role === 'tutor';
+    }
+
+    /**
+     * Is this user the super_admin (the platform owner)?
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Can this user act in the tutor workspace? The super_admin teaches their
+     * own roster too, so they get every tutor capability plus admin extras.
+     * Use this (not isTutor) for "is this a teaching account?" checks.
+     */
+    public function actsAsTutor(): bool
+    {
+        return in_array($this->role, ['tutor', 'super_admin'], true);
     }
 
     /**
@@ -57,6 +78,24 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student';
+    }
+
+    /**
+     * The tutor who owns this student account (1 student → 1 tutor).
+     * Null for tutor / super_admin rows.
+     */
+    public function tutor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'tutor_id');
+    }
+
+    /**
+     * The students owned by this tutor (their roster). The tenancy backbone:
+     * every tutor-facing list scopes off this.
+     */
+    public function students(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class, 'tutor_id')->where('role', 'student');
     }
 
     /**

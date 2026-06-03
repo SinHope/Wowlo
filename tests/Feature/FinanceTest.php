@@ -55,7 +55,7 @@ it('404s when the tutor opens finance for a non-student', function () {
 
 it('lets a tutor set and update a single fee rate per student', function () {
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
 
     $this->actingAs($tutor)
         ->put(route('tutor.finance.fee.save', $student), ['fee_rate_per_hour' => 50])
@@ -101,7 +101,7 @@ it('shows a credit (negative outstanding) when prepaid', function () {
 
 it('lowers outstanding when the tutor records a payment', function () {
     $tutor = tutor();
-    $student = student();
+    $student = student(['tutor_id' => $tutor->id]);
     billStudent($student, 100.00);
 
     expect(Ledger::outstanding($student))->toBe(100.00);

@@ -2,7 +2,8 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
+    <form method="POST" action="{{ route('login') }}"
+          x-data="spinner('Logging in…', 'Laying out Wowlo…')" @submit="start()">
         @csrf
 
         <!-- Email Address -->
@@ -27,7 +28,7 @@
         <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
+                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember" checked>
                 <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
             </label>
         </div>
@@ -43,6 +44,8 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
+        <x-spinner-overlay />
     </form>
 
     <!-- Divider -->
@@ -72,4 +75,32 @@
         By logging in, you agree to our
         <a href="{{ route('privacy-policy') }}" target="_blank" class="text-primary-dark hover:underline font-semibold">Privacy Policy</a>.
     </p>
+
+    {{-- Remember the last email (safe). We deliberately NEVER store the password —
+         that belongs in the OS/browser password manager, not our localStorage. --}}
+    <script>
+        (function () {
+            const email    = document.getElementById('email');
+            const password = document.getElementById('password');
+            const remember = document.getElementById('remember_me');
+            const form     = email?.closest('form');
+            const KEY      = 'wowlo_last_email';
+
+            // Pre-fill the last-used email (unless one was already kept on a failed attempt).
+            const saved = localStorage.getItem(KEY);
+            if (saved && !email.value) {
+                email.value = saved;
+                password?.focus();   // email known → jump straight to the password
+            }
+
+            // Remember the email only while "Remember me" is ticked; forget it otherwise.
+            form?.addEventListener('submit', function () {
+                if (remember?.checked) {
+                    localStorage.setItem(KEY, email.value);
+                } else {
+                    localStorage.removeItem(KEY);
+                }
+            });
+        })();
+    </script>
 </x-guest-layout>

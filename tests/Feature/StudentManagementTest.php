@@ -60,7 +60,7 @@ it('rejects creating a student with no phone numbers', function () {
 
 it('keeps the existing password when left blank on update', function () {
     $tutor = tutor();
-    $student = student(['email' => 'keep@example.com']);
+    $student = student(['email' => 'keep@example.com', 'tutor_id' => $tutor->id]);
     $originalHash = $student->password;
 
     $this->actingAs($tutor)
