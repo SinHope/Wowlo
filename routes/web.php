@@ -135,7 +135,11 @@ Route::middleware(['auth', 'verified', 'role:student'])
 
         // Fees — parent unlock gate, then read-only fee page.
         Route::get('fees/unlock', [StudentFeeController::class, 'unlock'])->name('fees.unlock');
-        Route::post('fees/unlock', [StudentFeeController::class, 'attemptUnlock'])->name('fees.unlock.attempt');
+        // Throttle the password attempts — the fee password is shared/static, so
+        // without this it's brute-forceable on a shared device (SECURITY.md §3).
+        Route::post('fees/unlock', [StudentFeeController::class, 'attemptUnlock'])
+            ->middleware('throttle:5,1')
+            ->name('fees.unlock.attempt');
         Route::post('fees/lock', [StudentFeeController::class, 'lock'])->name('fees.lock');
         Route::get('fees', [StudentFeeController::class, 'index'])->middleware('fee.unlocked')->name('fees.index');
 

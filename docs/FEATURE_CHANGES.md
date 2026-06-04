@@ -28,7 +28,7 @@ Once real users exist, you can't rebuild the database — you evolve it with mig
 
 ## 3. Worked example — adding a "Short Answer Section" to quizzes (🟡 additive)
 
-This is the real deferred feature, walked through so the pattern is concrete.
+This is the real deferred feature, walked through so the pattern is concrete. **It now has a full build spec with locked decisions → [short-answer-quizzes.md](short-answer-quizzes.md)** (next slice after deploy); the below stays as the illustrative pattern.
 
 The schema already anticipates it: `quiz_questions.question_type` exists and is currently always `'mcq'`. Adding short-answer is what that column was *for*.
 

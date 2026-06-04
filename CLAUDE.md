@@ -10,7 +10,7 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - **Google OAuth must NEVER auto-create accounts** — it only links to tutor-provisioned accounts. Unknown email → rejected, no account created.
 - **Student data isolation:** a student can only ever access their own homework / messages / fees / payments / quiz attempts / quiz diagrams. Enforce + test this on every student-facing feature.
 - **Tutor tenancy isolation:** `users.tutor_id` is the ownership backbone (a student's owning tutor; NULL for tutor/super_admin). Every tutor-facing list MUST scope by the acting tutor (`auth()->user()->students()` or `where('tutor_id', auth()->id())`), and every route-bound record MUST be ownership-checked (404, not 403, so IDs don't leak) — a tutor can never see/touch another tutor's students, homework, messages, fees, bills, or quizzes. `tutor_id` is set server-side only (never from client input; request rules never include it). **Exception:** exam papers are a SHARED, moderated library — approved papers are global; a non-admin tutor's upload is `pending` until the super_admin approves (then the uploader gets a Message). New cross-tenant behaviour needs an isolation test in `tests/Feature/MultiTutorTest.php`.
-- **No public tutor sign-up (yet):** tutor accounts are created only by the super_admin at `/admin/tutors`. Public self-registration is Phase 2 and must remain purely additive (a new account is just `role=tutor, tutor_id=null` — identical to an admin-created one), so existing tutors never lose data.
+- **No public tutor sign-up (yet):** tutor accounts are created only by the super_admin at `/admin/tutors`. Public self-registration is Phase 2 and must remain purely additive (a new account is just `role=tutor, tutor_id=null` — identical to an admin-created one), so existing tutors never lose data. Full plan: [`docs/public-tutor-sign-up.md`](docs/public-tutor-sign-up.md).
 - When a tool/command needs a secret to be set, write to `.env` via tooling **without reading it back**, then ask the user to verify in their editor.
 
 ## 📚 Reference docs (read before relevant work)
@@ -18,6 +18,14 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - [`docs/DATABASE.md`](docs/DATABASE.md) — schema map, tenancy model, and the rules for safe migrations. **Read before writing any migration.**
 - [`docs/FEATURE_CHANGES.md`](docs/FEATURE_CHANGES.md) — how to add/change features after launch without breaking live users (additive vs expand-contract). **Read before changing an existing feature.**
 - [`docs/SCALABILITY.md`](docs/SCALABILITY.md) — indexing, N+1, pagination, Neon pooling, caching, queues; what to do at each growth stage.
+- [`docs/SECURITY.md`](docs/SECURITY.md) — auth, tenant isolation, file-upload rules, secrets, PDPA. **Read before touching auth, data access, uploads, or payments.**
+- [`docs/TESTING.md`](docs/TESTING.md) — what tests exist, how to run them, the manual checklist, and what must be green before deploy.
+- [`docs/INCIDENT_RESPONSE.md`](docs/INCIDENT_RESPONSE.md) — step-by-step playbooks for when something breaks in production.
+- [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) — routine upkeep (logs, backups, audits, user management) after launch.
+- [`docs/deployment-slice11-runbook.md`](docs/deployment-slice11-runbook.md) — the deploy steps (Render + UptimeRobot, subdomain-first).
+- [`docs/onboarding-feature.md`](docs/onboarding-feature.md) — how the welcome tour works and how to change it.
+- [`docs/public-tutor-sign-up.md`](docs/public-tutor-sign-up.md) — Phase 2 plan for tutor self-registration (additive; not built yet).
+- [`docs/short-answer-quizzes.md`](docs/short-answer-quizzes.md) — build spec for short-answer questions + manual grading (next slice after deploy; decisions locked).
 
 ## Stack
 
