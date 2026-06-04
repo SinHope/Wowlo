@@ -21,14 +21,15 @@
 
 ## Steps
 
-### 1. Containerize the app
-- Add a production `Dockerfile`: nginx + php-fpm, `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, then cache config/routes/views on boot.
-- Add `render.yaml` describing the web service.
-- Test the image builds locally before pushing.
+### 1. Containerize the app ✅ DONE (committed)
+- `Dockerfile` — multi-stage: Vite asset build (node) → `serversideup/php:8.4-fpm-nginx`, `composer install --no-dev --optimize-autoloader`. serversideup runs `migrate --force` + config/route/view cache **on boot** (via `AUTORUN_*`), after Render injects env.
+- `.dockerignore` + `render.yaml` (Render Blueprint).
+- **Hardening baked in:** trust proxies + force-HTTPS in production; `SecurityHeaders` middleware (X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy) with a test.
+- nginx listens on **8080** (serversideup default) — Render auto-detects; if not, set the port to 8080 in the dashboard.
 
 ### 2. Create the Render Web Service
-- New Web Service from the GitHub repo, **Free** plan.
-- Point it at the `Dockerfile`.
+- Push to GitHub, then Render → **New → Blueprint** (it reads `render.yaml`) — or New → Web Service → Docker. **Free** plan, Singapore.
+- Render builds from the `Dockerfile` automatically.
 
 ### 3. Set environment variables (in Render's dashboard)
 Set the keys below in Render. **Copy the *values* from your local `.env` yourself** — they are never read or echoed here. (Cross-check against `.env.example` for the full set your app expects.)
@@ -42,10 +43,14 @@ Production-specific:
 
 Database (use Neon's **pooled** connection string — the host with `-pooler`):
 - `DB_CONNECTION=pgsql`
-- `DATABASE_URL` (pooled) **or** the discrete `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` + `DB_SSLMODE=require`
+- **`DB_URL`** = the Neon pooled connection string (the app reads `DB_URL`, not `DATABASE_URL`)
+- `DB_SSLMODE=require`
 
 Storage (Cloudflare R2):
-- `FILESYSTEM_DISK`, `R2_*` keys (access key, secret, bucket, endpoint, region)
+- `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_ENDPOINT`
+
+Web push (VAPID):
+- `VAPID_SUBJECT`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
 
 Auth (Google OAuth):
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://wowlo.onrender.com/auth/google/callback`
