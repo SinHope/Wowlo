@@ -70,6 +70,11 @@
         Continue with Google
     </a>
 
+    <!-- Install the app (PWA) -->
+    <div class="mt-4">
+        <x-install-app variant="block" />
+    </div>
+
     <!-- Privacy Policy -->
     <p class="mt-6 text-center text-xs text-muted">
         By logging in, you agree to our

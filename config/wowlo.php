@@ -38,6 +38,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Promote PWA install
+    |--------------------------------------------------------------------------
+    | Whether to show the "Install app" button + the install toast. A PWA is
+    | bound to its ORIGIN: anyone who installs from a temporary domain (e.g.
+    | wowlo.onrender.com) must reinstall once we move to the permanent domain.
+    | (Their data is always safe — it lives server-side, not on the device.)
+    | So keep this FALSE while on the throwaway subdomain, and flip it TRUE the
+    | day we cut over to the permanent domain, so installs happen only once.
+    | Defaults TRUE for local dev so the button is visible while building.
+    */
+    'promote_install' => env('PWA_PROMOTE_INSTALL', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Levels
     |--------------------------------------------------------------------------
     | Canonical list of school levels. Exam papers are organised first by

@@ -1,4 +1,7 @@
-{{-- One-time "Add to home screen" prompt. Shown once; dismissal is remembered. --}}
+{{-- One-time "Add to home screen" prompt. Shown once; dismissal is remembered.
+     Gated by config('wowlo.promote_install') so we don't invite installs on a
+     throwaway domain (see config/wowlo.php). --}}
+@if (config('wowlo.promote_install'))
 <div x-data="pwaInstall()" x-show="visible" x-cloak x-transition
      class="fixed inset-x-4 bottom-4 z-40 mx-auto max-w-md rounded-2xl border border-gray-200 bg-white p-4 shadow-xl sm:left-auto sm:right-4 sm:mx-0">
     <div class="flex items-start gap-3">
@@ -54,3 +57,4 @@
         };
     }
 </script>
+@endif

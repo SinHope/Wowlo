@@ -141,6 +141,8 @@
                         <div x-show="menu" @click.outside="menu = false" x-transition style="display:none"
                              class="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                             <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-ink hover:bg-gray-100">Profile</a>
+                            <button type="button" @click="$dispatch('wowlo:replay-onboarding'); menu = false"
+                                    class="block w-full px-4 py-2 text-left text-sm text-ink hover:bg-gray-100 cursor-pointer">Replay tutorial</button>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="block w-full px-4 py-2 text-left text-sm text-danger hover:bg-gray-100 cursor-pointer">Log out</button>
@@ -157,5 +159,6 @@
         </div>
 
         @include('partials.pwa-install')
+        @include('partials.onboarding')
     </body>
 </html>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\TutorController as AdminTutorController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Student\FeeController as StudentFeeController;
@@ -54,6 +55,9 @@ Route::middleware('auth')->group(function () {
     // PWA web-push subscription register/remove (best-effort enhancement).
     Route::post('/push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
     Route::delete('/push/subscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
+
+    // Mark the welcome tour as seen (called from the onboarding modal).
+    Route::post('/onboarding/complete', [OnboardingController::class, 'complete'])->name('onboarding.complete');
 });
 
 // Super-admin-only area — manage tutor accounts (no public sign-up yet).

@@ -13,6 +13,12 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - **No public tutor sign-up (yet):** tutor accounts are created only by the super_admin at `/admin/tutors`. Public self-registration is Phase 2 and must remain purely additive (a new account is just `role=tutor, tutor_id=null` — identical to an admin-created one), so existing tutors never lose data.
 - When a tool/command needs a secret to be set, write to `.env` via tooling **without reading it back**, then ask the user to verify in their editor.
 
+## 📚 Reference docs (read before relevant work)
+
+- [`docs/DATABASE.md`](docs/DATABASE.md) — schema map, tenancy model, and the rules for safe migrations. **Read before writing any migration.**
+- [`docs/FEATURE_CHANGES.md`](docs/FEATURE_CHANGES.md) — how to add/change features after launch without breaking live users (additive vs expand-contract). **Read before changing an existing feature.**
+- [`docs/SCALABILITY.md`](docs/SCALABILITY.md) — indexing, N+1, pagination, Neon pooling, caching, queues; what to do at each growth stage.
+
 ## Stack
 
 Laravel 13 · PHP 8.4 (Laravel Herd, Windows) · Blade · Tailwind CSS v3 · Alpine.js · PostgreSQL (Neon, Singapore region) · Cloudflare R2 (private bucket, disk `r2`) · PWA. Auth via Breeze + Socialite (Google).

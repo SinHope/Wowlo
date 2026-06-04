@@ -43,7 +43,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'onboarded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Has this user never finished/skipped the welcome tour? Drives whether the
+     * onboarding modal auto-shows. Set server-side via OnboardingController.
+     */
+    public function needsOnboarding(): bool
+    {
+        return is_null($this->onboarded_at);
     }
 
     /**

@@ -76,6 +76,7 @@
             <div class="flex items-center gap-4 sm:gap-6">
                 <a href="{{ route('about') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">About</a>
                 <a href="{{ route('contact') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
+                <x-install-app />
                 @auth
                     <a href="{{ route('dashboard') }}"
                        class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">

@@ -23,6 +23,20 @@ Alpine.data('spinner', (stage1 = 'Connecting to server…', stage2 = null) => ({
 
 Alpine.start();
 
+// Capture the install prompt as early as possible (it can fire before any
+// Alpine component mounts). Both the install button and the install toast read
+// window.__wowloDeferredInstall so neither misses the event. iOS never fires
+// this — those users get manual "Add to Home Screen" instructions instead.
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.__wowloDeferredInstall = e;
+    window.dispatchEvent(new Event('wowlo:installable'));
+});
+window.addEventListener('appinstalled', () => {
+    window.__wowloDeferredInstall = null;
+    window.dispatchEvent(new Event('wowlo:installed'));
+});
+
 // Register the PWA service worker (installability + web push).
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
