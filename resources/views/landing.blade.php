@@ -66,27 +66,51 @@
 <body class="bg-cream font-sans text-ink antialiased">
 
     {{-- ───────────────────────── Nav ───────────────────────── --}}
-    <header x-data="{ scrolled: false }" @scroll.window="scrolled = window.scrollY > 8"
+    <header x-data="{ scrolled: false, mobileOpen: false }" @scroll.window="scrolled = window.scrollY > 8"
             class="fixed inset-x-0 top-0 z-30 transition-all duration-200"
-            :class="scrolled ? 'bg-cream/90 shadow-sm backdrop-blur' : ''">
+            :class="(scrolled || mobileOpen) ? 'bg-cream/90 shadow-sm backdrop-blur' : ''">
         <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
             <a href="{{ url('/') }}" class="flex items-center gap-2">
                 <img src="{{ asset('images/logo/wowlo_logo.png') }}" alt="Wowlo" class="h-20 w-auto">
             </a>
-            <div class="flex items-center gap-4 sm:gap-6">
-                <a href="{{ route('about') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">About</a>
-                <a href="{{ route('contact') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
-                <x-install-app />
+
+            <div class="flex items-center gap-3 sm:gap-6">
+                {{-- Secondary links — inline on desktop, collapse into the hamburger on mobile --}}
+                <div class="hidden items-center gap-4 sm:flex sm:gap-6">
+                    <a href="{{ route('about') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">About</a>
+                    <a href="{{ route('contact') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
+                    <x-install-app />
+                </div>
+
+                {{-- Primary action — always visible (login-first app) --}}
                 @auth
                     <a href="{{ route('dashboard') }}"
-                       class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
-                        Go to Dashboard
+                       class="rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
+                        Dashboard
                     </a>
                 @else
                     <x-button-shiny :href="route('login')">Log in</x-button-shiny>
                 @endauth
+
+                {{-- Hamburger — mobile only --}}
+                <button @click="mobileOpen = ! mobileOpen" type="button"
+                        class="grid h-10 w-10 shrink-0 place-items-center rounded-lg text-ink hover:bg-ink/5 cursor-pointer sm:hidden"
+                        :aria-expanded="mobileOpen" aria-label="Menu">
+                    <svg x-show="! mobileOpen" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                    <svg x-show="mobileOpen" x-cloak class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                </button>
             </div>
         </nav>
+
+        {{-- Mobile dropdown menu --}}
+        <div x-show="mobileOpen" x-collapse x-cloak @click.outside="mobileOpen = false"
+             class="border-t border-gray-100 bg-cream/95 px-4 pb-4 pt-1 backdrop-blur sm:hidden">
+            <div class="flex flex-col">
+                <a href="{{ route('about') }}" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-ink/5 cursor-pointer">About</a>
+                <a href="{{ route('contact') }}" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-ink/5 cursor-pointer">Contact</a>
+                <div class="px-3 py-3"><x-install-app /></div>
+            </div>
+        </div>
     </header>
 
     {{-- ───────── Hero (NEW — dark spotlight + interactive 3D, ported from 21st.dev) ───────── --}}
