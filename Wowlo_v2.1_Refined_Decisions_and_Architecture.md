@@ -311,7 +311,8 @@ The original `exam_papers` schema (v2.0 §7: tutor_id, title, subject, year, fil
 ### G. Build progress
 - ✅ **Slices 1–10 complete**: Foundation, App Shell, Auth, Students, Homework (+R2), Messages, Finance, Exam Papers, Quizzes, **PWA + Push**, public landing page + PDPA privacy policy.
 - ✅ **Slice 10.5 — Multi-tutor tenancy (2026-06-03)** — see §H below.
-- **Test count: 119** (Pest feature tests; in-memory SQLite — never touches Neon). Includes `tests/Feature/MultiTutorTest.php` (cross-tutor isolation, admin tutor mgmt, exam-paper approval).
+- ✅ **Onboarding tour + public site & UX polish (2026-06-04)** — see §I and §J below.
+- **Test count: 123** (Pest feature tests; in-memory SQLite — never touches Neon). Includes `tests/Feature/MultiTutorTest.php` (cross-tutor isolation, admin tutor mgmt, exam-paper approval) and `tests/Feature/OnboardingTest.php` (flag lifecycle).
 - **Next: Slice 11 (hardening + deploy to Render + UptimeRobot).**
 
 ### H. Multi-tutor tenancy (2026-06-03) — supersedes the single-tutor assumption
@@ -327,6 +328,29 @@ The app was built assuming one tutor (`auth()` *was* the tutor). It is now multi
 | MT5 | Public tutor sign-up | **Deferred to Phase 2.** Purely additive — a self-registered tutor is structurally identical (`role=tutor, tutor_id=null`), so existing tutors lose nothing when it ships. |
 
 **Architecture.** `users.tutor_id` (nullable FK → users) is the backbone: a student's owning tutor; NULL for tutor/super_admin. Content tables already carried `tutor_id` (homeworks, quizzes, exam_papers, bills); fees/payments/bills/quiz_assignments resolve ownership through the student. The real work was **enforcement**, not schema: every tutor list scopes to `auth()->id()` and every route-bound model is ownership-checked (404). `RoleMiddleware` now accepts a list (`role:tutor,super_admin`). Roles enforced by a widened Postgres CHECK (`student|tutor|super_admin`). `exam_papers` gained `status` (`pending|approved`, default `approved` to backfill), `approved_by`, `approved_at`. Tutors got a received-message **Inbox** (`tutor.messages.inbox`) so approval notices land somewhere. New migrations: `2026_06_03_000000/000010/000020`. Pre-existing orphaned students were backfilled to the super_admin.
+
+---
+
+### I. Onboarding tour (2026-06-04)
+
+A short, **role-aware welcome tour** shown the first time an account reaches the dashboard, and replayable anytime from the name menu. Full doc: [`docs/onboarding-feature.md`](docs/onboarding-feature.md).
+
+- **Trigger = server-side flag**, `users.onboarded_at` (nullable timestamp; additive migration `2026_06_04_000010`). `NULL` → auto-opens **on the dashboard route only**; once set it never auto-shows again. Server-side (not `localStorage`) so it shows once *per account*, survives PWA reinstalls/the domain move, and isn't re-nagged on new devices.
+- **UI = card carousel modal** (bottom sheet on mobile, dialog on desktop) — pure Alpine + Tailwind, no new dependency. One card per feature with an icon, a **"Menu: <name>"** chip, and a short description; a dedicated **password** card deep-links to `profile.edit#update-password`. Content is role-specific (super_admin / tutor / student).
+- **Why modal, not element-spotlight:** Wowlo's nav is a collapsed sidebar on the phone/tablet PWA, so highlighting live nav items is fragile. The tour *names* each menu item instead of pointing at it.
+- **Completion:** modal POSTs `onboarding.complete` (`OnboardingController@complete`, idempotent, `204`) via `fetch(keepalive)` so it still records if the user navigates away. Replay is client-only (dispatches `wowlo:replay-onboarding`) and does not touch the flag.
+- **Files:** `OnboardingController`, `User::needsOnboarding()`, `partials/onboarding.blade.php`, name-menu hook in `layouts/app`, `tests/Feature/OnboardingTest.php` (needs-onboarding · complete sets flag · idempotent · auth required).
+- **Decision (2026-06-04): "navigate to each feature page during the tour" is deferred to Phase 2, feedback-gated.** Possible (three shapes, from a per-step "Show me" link → full guided auto-navigation → element-spotlight), but not built yet. With a small known audience now, we keep the current dashboard modal and **let real user feedback decide**: clear enough → leave it; users want to be walked into sections → revisit in Phase 2 (likely starting with "Show me" links). Rationale + options in `docs/onboarding-feature.md` §6.
+
+### J. Public site & auth polish (2026-06-04)
+
+Non-tenant, marketing/account-facing additions — all additive, no schema or tenancy impact.
+
+- **Landing page** (`landing.blade.php`) reworked with a dark spotlight hero ported from 21st.dev (pure animated SVG + CSS, no React) and a Spline 3D robot. The nav **Log in** button uses `<x-button-shiny>` — a 21st.dev shiny-gradient button ported to **pure Blade + Tailwind** (no React/shadcn/TS; spans not divs for valid `<a>`/`<button>` markup; font overridden to the site's Nunito `font-bold` for brand consistency).
+- **About** (`about.blade.php`) and **Contact** pages — contact form posts to `ContactController`, emails via `Mail\ContactMessage` (`emails/contact.blade.php`). Routes `about`, `contact`.
+- **Forgot/reset password** flow fixed and restyled (`auth/forgot-password.blade.php`, `auth/login.blade.php`).
+- **Install-app affordance** (`components/install-app.blade.php`) and spinner/loader overlays (`components/spinner-overlay.blade.php`) for slower Neon-cold-start / R2 actions.
+- **Companion guardrail docs added** (referenced from `CLAUDE.md`): [`docs/DATABASE.md`](docs/DATABASE.md), [`docs/FEATURE_CHANGES.md`](docs/FEATURE_CHANGES.md), [`docs/SCALABILITY.md`](docs/SCALABILITY.md) — schema/tenancy + safe-migration rules, additive vs expand-contract feature changes, and growth-stage scalability. Plus `docs/deployment-slice11-runbook.md` for the upcoming deploy.
 
 ---
 

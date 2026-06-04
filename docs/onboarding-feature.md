@@ -74,5 +74,21 @@ Content is **role-specific**:
 ## 6. Known behaviour & future enhancements
 
 - **Modal, not spotlight.** We deliberately use a card modal rather than highlighting live nav elements, because Wowlo is a phone/tablet PWA where the nav is a collapsed sidebar + dropdown — spotlighting hidden elements is fragile on mobile. Trade-off: it *names* the menu item rather than physically pointing at it.
-- **Possible future upgrade:** a true element-spotlight walkthrough (e.g. Driver.js) that auto-opens the sidebar and highlights each item, with cross-page step persistence. More immersive, more moving parts — revisit if users want it.
 - **Per-feature coach marks:** small one-time tips on individual pages (e.g. first time on the Quiz builder) could complement the global tour later, using the same `onboarded_at`-style flag pattern per feature.
+
+### Decision: "navigate to each feature page" is deferred to Phase 2 (2026-06-04)
+
+A natural ask came up: instead of the tour staying on the dashboard and *naming* each menu item, could it **actually navigate to each feature page** as you step through it?
+
+**It's possible**, in three shapes (least → most effort):
+
+1. **"Show me" link per step** — keep this carousel, add a "Take me to <feature> →" button on each card (same proven pattern the password step already uses). Tour pauses when they click through.
+2. **Guided walk (auto-navigate)** — Next loads the real feature page and the card reappears shrunk into a corner so the page is visible behind it. Requires step state persisted across full page reloads (server-rendered Blade = a reload per step), the onboarding partial loaded on *every* feature page, and the card re-worked from full overlay → corner popover. Most "wow", most moving parts, and heavier on the mobile PWA.
+3. **Element-spotlight walkthrough** (e.g. Driver.js) that auto-opens the sidebar and highlights each item — rejected for the mobile-fragility reason above.
+
+**Decision — leave the current dashboard modal as-is for now, and let real usage decide.** The live audience is small and known (the owner's own students plus a few tutors and theirs), so we'll **gather their feedback first**:
+
+- If users say the current tour is clear and good enough → **keep it unchanged.**
+- If they say they'd rather be walked into each section → **revisit in Phase 2**, most likely starting with option 1 ("Show me" links — small, safe, additive) before considering option 2.
+
+This keeps us from building immersive tour machinery nobody has asked for yet. Phase 2 is also where public tutor sign-up lands (see architecture §H, MT5), so onboarding polish is a natural fit to reassess then.

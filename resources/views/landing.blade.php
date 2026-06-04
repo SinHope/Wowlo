@@ -83,10 +83,7 @@
                         Go to Dashboard
                     </a>
                 @else
-                    <a href="{{ route('login') }}"
-                       class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
-                        Log in
-                    </a>
+                    <x-button-shiny :href="route('login')">Log in</x-button-shiny>
                 @endauth
             </div>
         </nav>
