@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureFeeUnlocked;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,9 +15,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Render's load balancer (and any PaaS proxy), trust the
+        // X-Forwarded-* headers so Laravel knows the request is HTTPS and
+        // generates https URLs / sets the Secure cookie correctly.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'fee.unlocked' => \App\Http\Middleware\EnsureFeeUnlocked::class,
+            'role' => RoleMiddleware::class,
+            'fee.unlocked' => EnsureFeeUnlocked::class,
+        ]);
+
+        // Baseline security headers on every web response.
+        $middleware->web(append: [
+            SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

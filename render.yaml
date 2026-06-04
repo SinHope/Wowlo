@@ -1,0 +1,93 @@
+# Render Blueprint for Wowlo (Slice 11).
+# Create the service from this file (Render → New → Blueprint), then fill in the
+# `sync: false` secrets in the dashboard. Non-secret config is set here directly.
+#
+# Secrets are NEVER stored in this file (sync: false = "ask me in the dashboard").
+# Copy each secret's VALUE from your local .env — they are never read here.
+services:
+  - type: web
+    name: wowlo
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up          # Laravel's built-in health route
+    autoDeploy: true              # deploy on push to the default branch
+    envVars:
+      # ── App ────────────────────────────────────────────────────────────────
+      - key: APP_NAME
+        value: Wowlo
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://wowlo.onrender.com    # ⚠ match your actual service URL
+      - key: LOG_CHANNEL
+        value: stderr                          # logs → Render's log viewer
+      - key: APP_KEY
+        sync: false                            # paste your local APP_KEY (or generate one)
+
+      # ── Database (Neon — use the POOLED connection string) ──────────────────
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_SSLMODE
+        value: require
+      - key: DB_URL
+        sync: false                            # Neon pooled connection string
+
+      # ── Onboarding / PWA install gate (off until the permanent domain) ──────
+      - key: PWA_PROMOTE_INSTALL
+        value: "false"
+
+      # ── serversideup AUTORUN: migrate + cache config/routes/views on boot ────
+      - key: AUTORUN_ENABLED
+        value: "true"
+      - key: AUTORUN_LARAVEL_MIGRATION
+        value: "true"
+      - key: PHP_OPCACHE_ENABLE
+        value: "1"
+
+      # ── Cloudflare R2 (private bucket) ──────────────────────────────────────
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+
+      # ── Google OAuth (login only) ───────────────────────────────────────────
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://wowlo.onrender.com/auth/google/callback   # ⚠ match APP_URL
+
+      # ── Mail (Resend) ───────────────────────────────────────────────────────
+      - key: MAIL_MAILER
+        value: resend
+      - key: MAIL_FROM_NAME
+        value: Wowlo
+      - key: MAIL_FROM_ADDRESS
+        sync: false                            # resend.dev fallback until domain verified
+      - key: RESEND_API_KEY
+        sync: false
+
+      # ── Web push (VAPID) ────────────────────────────────────────────────────
+      - key: VAPID_SUBJECT
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+
+      # ── Wowlo app config ────────────────────────────────────────────────────
+      - key: FEE_VIEW_PASSWORD
+        sync: false
+      - key: PAYNOW_NUMBER
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false

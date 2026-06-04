@@ -1,0 +1,28 @@
+# Keep the build context small and secret-free.
+.git
+.github
+.idea
+.vscode
+
+# Never ship secrets — set env vars in the Render dashboard instead.
+.env
+.env.*
+
+# Rebuilt inside the image.
+node_modules
+vendor
+public/build
+public/hot
+
+# Local-only / dev artifacts.
+database/database.sqlite
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+tests
+.phpunit.result.cache
+
+# Docs aren't needed in the runtime image.
+docs
+*.md
