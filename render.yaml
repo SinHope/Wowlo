@@ -36,9 +36,12 @@ services:
       - key: DB_URL
         sync: false                            # Neon pooled connection string
 
-      # ── Onboarding / PWA install gate (off until the permanent domain) ──────
+      # ── PWA install gate ────────────────────────────────────────────────────
+      # ON during the onrender.com phase by choice (Nas wants to test install).
+      # Tradeoff accepted: installs on this temp domain need a one-time reinstall
+      # at the permanent-domain cutover — data is server-side, nothing is lost.
       - key: PWA_PROMOTE_INSTALL
-        value: "false"
+        value: "true"
 
       # ── serversideup AUTORUN: migrate + cache config/routes/views on boot ────
       - key: AUTORUN_ENABLED
