@@ -26,6 +26,9 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Email is not case-sensitive — normalise so the lookup matches.
+        $request->merge(['email' => strtolower(trim((string) $request->input('email')))]);
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);

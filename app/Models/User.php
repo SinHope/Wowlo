@@ -6,7 +6,11 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -45,6 +49,18 @@ class User extends Authenticatable
             'password' => 'hashed',
             'onboarded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Always store the email lowercased + trimmed. Email is not case-sensitive,
+     * but Postgres string matching is — so normalising on write (here) plus on
+     * every lookup keeps logins case-insensitive.
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value === null ? null : strtolower(trim($value)),
+        );
     }
 
     /**
@@ -94,7 +110,7 @@ class User extends Authenticatable
      * The tutor who owns this student account (1 student → 1 tutor).
      * Null for tutor / super_admin rows.
      */
-    public function tutor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tutor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tutor_id');
     }
@@ -103,7 +119,7 @@ class User extends Authenticatable
      * The students owned by this tutor (their roster). The tenancy backbone:
      * every tutor-facing list scopes off this.
      */
-    public function students(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function students(): HasMany
     {
         return $this->hasMany(User::class, 'tutor_id')->where('role', 'student');
     }
@@ -111,7 +127,7 @@ class User extends Authenticatable
     /**
      * Homework assigned to this user (as a student).
      */
-    public function homework(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function homework(): HasMany
     {
         return $this->hasMany(Homework::class, 'student_id');
     }
@@ -119,7 +135,7 @@ class User extends Authenticatable
     /**
      * Homework created by this user (as a tutor).
      */
-    public function homeworkCreated(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function homeworkCreated(): HasMany
     {
         return $this->hasMany(Homework::class, 'tutor_id');
     }
@@ -127,7 +143,7 @@ class User extends Authenticatable
     /**
      * Messages this user has received (as a student/parent).
      */
-    public function receivedMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function receivedMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'receiver_id');
     }
@@ -135,7 +151,7 @@ class User extends Authenticatable
     /**
      * Messages this user has sent (as a tutor).
      */
-    public function sentMessages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function sentMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
@@ -143,7 +159,7 @@ class User extends Authenticatable
     /**
      * This student's fee structure (hourly rate). One per student.
      */
-    public function tuitionFee(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function tuitionFee(): HasOne
     {
         return $this->hasOne(TuitionFee::class, 'student_id');
     }
@@ -151,7 +167,7 @@ class User extends Authenticatable
     /**
      * Payments this student has made.
      */
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'student_id');
     }
@@ -159,7 +175,7 @@ class User extends Authenticatable
     /**
      * Bills issued to this student.
      */
-    public function bills(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function bills(): HasMany
     {
         return $this->hasMany(Bill::class, 'student_id');
     }
@@ -167,7 +183,7 @@ class User extends Authenticatable
     /**
      * Quizzes created by this user (as a tutor).
      */
-    public function quizzesCreated(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function quizzesCreated(): HasMany
     {
         return $this->hasMany(Quiz::class, 'tutor_id');
     }
@@ -175,7 +191,7 @@ class User extends Authenticatable
     /**
      * Quizzes assigned to this user (as a student).
      */
-    public function quizAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function quizAssignments(): HasMany
     {
         return $this->hasMany(QuizAssignment::class, 'student_id');
     }
@@ -183,7 +199,7 @@ class User extends Authenticatable
     /**
      * This student's quiz attempts.
      */
-    public function quizAttempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function quizAttempts(): HasMany
     {
         return $this->hasMany(QuizAttempt::class, 'student_id');
     }

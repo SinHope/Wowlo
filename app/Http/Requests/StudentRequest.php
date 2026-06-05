@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesEmail;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StudentRequest extends FormRequest
 {
+    use NormalizesEmail;
+
     /**
      * Only tutors reach here (route is behind role:tutor), so authorize freely.
      */

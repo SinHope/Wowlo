@@ -46,8 +46,8 @@ class GoogleAuthController extends Controller
         $user = User::where('google_id', $googleUser->getId())->first();
 
         if (! $user) {
-            // 3. Match a tutor-created account by email and link it.
-            $user = User::where('email', $googleUser->getEmail())->first();
+            // 3. Match a tutor-created account by email and link it (case-insensitive).
+            $user = User::where('email', strtolower(trim($googleUser->getEmail())))->first();
 
             if ($user && $user->google_id === null) {
                 $user->update(['google_id' => $googleUser->getId()]);
