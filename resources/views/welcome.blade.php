@@ -8,6 +8,7 @@
 
         <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
 
+        
         @fonts
 
         <!-- Styles / Scripts -->

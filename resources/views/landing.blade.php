@@ -78,6 +78,7 @@
                 {{-- Secondary links — inline on desktop, collapse into the hamburger on mobile --}}
                 <div class="hidden items-center gap-4 sm:flex sm:gap-6">
                     <a href="{{ route('about') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">About</a>
+                    <a href="{{ route('how-to-use') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">How to use</a>
                     <a href="{{ route('contact') }}" class="text-sm font-semibold text-ink transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
                     <x-install-app />
                 </div>
@@ -107,6 +108,7 @@
              class="border-t border-gray-100 bg-cream/95 px-4 pb-4 pt-1 backdrop-blur sm:hidden">
             <div class="flex flex-col">
                 <a href="{{ route('about') }}" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-ink/5 cursor-pointer">About</a>
+                <a href="{{ route('how-to-use') }}" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-ink/5 cursor-pointer">How to use</a>
                 <a href="{{ route('contact') }}" class="rounded-lg px-3 py-3 text-base font-semibold text-ink hover:bg-ink/5 cursor-pointer">Contact</a>
                 <div class="px-3 py-3"><x-install-app /></div>
             </div>
@@ -308,6 +310,7 @@
             </div>
             <nav class="flex items-center gap-6 text-sm font-semibold text-muted">
                 <a href="{{ route('about') }}" class="transition-colors hover:text-primary-dark cursor-pointer">About</a>
+                <a href="{{ route('how-to-use') }}" class="transition-colors hover:text-primary-dark cursor-pointer">How to use</a>
                 <a href="{{ route('privacy-policy') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Privacy Policy</a>
                 <a href="{{ route('contact') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Contact</a>
                 <a href="{{ route('login') }}" class="transition-colors hover:text-primary-dark cursor-pointer">Log in</a>

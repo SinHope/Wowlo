@@ -33,6 +33,12 @@ Route::get('/about', function () {
     return view('about');
 })->name('about');
 
+// Public "How to use Wowlo" guide — the same walkthrough as the in-app
+// onboarding tour, but shown inline on the page (Student / Tutor tabs).
+Route::get('/how-to-use', function () {
+    return view('how-to-use');
+})->name('how-to-use');
+
 // Public "Contact us" page. Submission is rate-limited against spam/abuse.
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])
