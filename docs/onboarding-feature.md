@@ -71,7 +71,24 @@ Content is **role-specific**:
 
 ---
 
-## 6. Known behaviour & future enhancements
+## 7. Public "How to use" page (a non-modal mirror of this tour)
+
+There's a **public** companion to the tour at **`/how-to-use`** (route name `how-to-use`, view `resources/views/how-to-use.blade.php`), linked from the landing page navbar (desktop + mobile) and the footer. It shows the **same walkthrough content as the modal, but inline on the page** — a stepper card with progress dots and Back/Next instead of an overlay — so visitors can learn the app **before** logging in.
+
+| Aspect | The tour (`partials/onboarding.blade.php`) | The page (`how-to-use.blade.php`) |
+|---|---|---|
+| Trigger | Auto-opens on first dashboard visit (`onboarded_at` NULL); replayable | A normal public page you navigate to |
+| Form | Fixed modal overlay | Inline carousel card, centered on the page |
+| Audience | Role-aware (reads `auth()->user()`) | Public, so it can't read a role — a **For students / For tutors** toggle picks the set |
+| Auth | Behind login | Logged-out friendly (last card CTA is "Log in", or "Go to Dashboard" if authed) |
+
+**Screenshots.** Each step can carry a list of screenshots (`'imgs' => [...]`) saved in **`public/images/how-to-use/`** (`.jpeg`). They render as a small side-by-side gallery (text on the right; stacks on mobile). A file is shown **only if it exists** (`file_exists` check), so missing/added screenshots never break the page — a step with no image falls back to its Heroicon. Filenames follow `student-<feature>.jpeg` / `tutor-<feature>.jpeg` (some features have a `-2` second shot or an extra screen, e.g. `tutor-homework-status*.jpeg`, `tutor-whatsapp-billing.jpeg`).
+
+> ⚠️ **Content is duplicated.** The step copy lives in **both** `partials/onboarding.blade.php` (`$steps`) and `how-to-use.blade.php` (`$studentSteps` / `$tutorSteps`). If you reword a step, update **both**. (A future refactor could lift the steps into `config/` as a single source of truth.)
+
+---
+
+## 8. Known behaviour & future enhancements
 
 - **Modal, not spotlight.** We deliberately use a card modal rather than highlighting live nav elements, because Wowlo is a phone/tablet PWA where the nav is a collapsed sidebar + dropdown — spotlighting hidden elements is fragile on mobile. Trade-off: it *names* the menu item rather than physically pointing at it.
 - **Per-feature coach marks:** small one-time tips on individual pages (e.g. first time on the Quiz builder) could complement the global tour later, using the same `onboarded_at`-style flag pattern per feature.

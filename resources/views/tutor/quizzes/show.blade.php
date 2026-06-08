@@ -74,16 +74,23 @@
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <h3 class="text-lg font-bold text-ink">Results</h3>
             @forelse ($quiz->attempts as $attempt)
-                <div class="mt-3 flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
-                    <span class="font-semibold text-ink">{{ $attempt->student->name }}</span>
-                    @if ($attempt->isCompleted())
-                        <span class="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
-                            {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }}
+                @if ($attempt->isCompleted())
+                    <a href="{{ route('tutor.quizzes.attempts.show', [$quiz, $attempt]) }}"
+                       class="mt-3 flex items-center justify-between gap-3 rounded-lg border border-gray-100 px-4 py-3 hover:bg-gray-50 cursor-pointer">
+                        <span class="font-semibold text-ink">{{ $attempt->student->name }}</span>
+                        <span class="flex items-center gap-2">
+                            <span class="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
+                                {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }}
+                            </span>
+                            <span class="text-sm font-semibold text-primary">View answers &rarr;</span>
                         </span>
-                    @else
+                    </a>
+                @else
+                    <div class="mt-3 flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
+                        <span class="font-semibold text-ink">{{ $attempt->student->name }}</span>
                         <span class="rounded-full bg-amber/10 px-3 py-1 text-xs font-semibold text-amber-600">In progress</span>
-                    @endif
-                </div>
+                    </div>
+                @endif
             @empty
                 <p class="mt-3 text-sm text-muted">No attempts yet.</p>
             @endforelse

@@ -5,6 +5,7 @@ use App\Models\ExamPaper;
 use App\Models\Homework;
 use App\Models\Quiz;
 use App\Models\QuizAssignment;
+use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
@@ -108,6 +109,55 @@ it('stops a tutor assigning homework or a quiz to another tutor\'s student', fun
         ->post(route('tutor.quizzes.assign', $quizA), ['student_ids' => [$studentB->id]])
         ->assertSessionHasErrors('student_ids.0');
     expect(QuizAssignment::count())->toBe(0);
+});
+
+it('lets a tutor view a submitted attempt on their own quiz but 404s on another tutor\'s', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentB = student(['tutor_id' => $tutorB->id, 'name' => 'Bee Student']);
+
+    $quizB = Quiz::create([
+        'tutor_id' => $tutorB->id, 'title' => 'B Quiz',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $attemptB = QuizAttempt::create([
+        'quiz_id' => $quizB->id, 'student_id' => $studentB->id,
+        'total_marks' => 2, 'obtained_marks' => 2, 'completed_at' => now(),
+    ]);
+
+    // The owning tutor can see the student's answers.
+    $this->actingAs($tutorB)
+        ->get(route('tutor.quizzes.attempts.show', [$quizB, $attemptB]))
+        ->assertOk()
+        ->assertSee('Bee Student');
+
+    // A different tutor cannot — neither via the quiz nor a smuggled attempt ID.
+    $this->actingAs($tutorA)
+        ->get(route('tutor.quizzes.attempts.show', [$quizB, $attemptB]))
+        ->assertNotFound();
+});
+
+it('404s when an attempt ID from a different quiz is smuggled into the URL', function () {
+    $tutor = tutor();
+    $studentMine = student(['tutor_id' => $tutor->id]);
+
+    $quizOne = Quiz::create([
+        'tutor_id' => $tutor->id, 'title' => 'Quiz One',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $quizTwo = Quiz::create([
+        'tutor_id' => $tutor->id, 'title' => 'Quiz Two',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $attemptOnTwo = QuizAttempt::create([
+        'quiz_id' => $quizTwo->id, 'student_id' => $studentMine->id,
+        'total_marks' => 1, 'obtained_marks' => 1, 'completed_at' => now(),
+    ]);
+
+    // Same tutor owns both, but the attempt doesn't belong to quizOne → 404.
+    $this->actingAs($tutor)
+        ->get(route('tutor.quizzes.attempts.show', [$quizOne, $attemptOnTwo]))
+        ->assertNotFound();
 });
 
 // ---- Admin: tutor account management ---------------------------------------

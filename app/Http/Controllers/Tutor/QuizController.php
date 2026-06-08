@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tutor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuizRequest;
 use App\Models\Quiz;
+use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,6 +90,24 @@ class QuizController extends Controller
         $assignedIds = $quiz->assignments()->pluck('student_id')->all();
 
         return view('tutor.quizzes.show', compact('quiz', 'students', 'assignedIds'));
+    }
+
+    /**
+     * View one student's submitted attempt — the answers they chose, what was
+     * correct, the marks, and any corrections they wrote.
+     */
+    public function attempt(Quiz $quiz, QuizAttempt $attempt): View
+    {
+        $this->ensureOwned($quiz);
+        // The attempt must belong to this quiz (so it's this tutor's data, and
+        // an ID from another quiz can't be smuggled in via the URL).
+        abort_unless($attempt->quiz_id === $quiz->id, 404);
+
+        $quiz->load('questions');
+        $attempt->load('student', 'answers');
+        $answersByQuestion = $attempt->answers->keyBy('question_id');
+
+        return view('tutor.quizzes.attempt', compact('quiz', 'attempt', 'answersByQuestion'));
     }
 
     /**

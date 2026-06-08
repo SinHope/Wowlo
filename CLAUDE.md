@@ -23,7 +23,7 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - [`docs/INCIDENT_RESPONSE.md`](docs/INCIDENT_RESPONSE.md) — step-by-step playbooks for when something breaks in production.
 - [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md) — routine upkeep (logs, backups, audits, user management) after launch.
 - [`docs/deployment-slice11-runbook.md`](docs/deployment-slice11-runbook.md) — the deploy steps (Render + UptimeRobot, subdomain-first).
-- [`docs/onboarding-feature.md`](docs/onboarding-feature.md) — how the welcome tour works and how to change it.
+- [`docs/onboarding-feature.md`](docs/onboarding-feature.md) — how the welcome tour works and how to change it, plus the public `/how-to-use` page that mirrors it.
 - [`docs/public-tutor-sign-up.md`](docs/public-tutor-sign-up.md) — Phase 2 plan for tutor self-registration (additive; not built yet).
 - [`docs/short-answer-quizzes.md`](docs/short-answer-quizzes.md) — build spec for short-answer questions + manual grading (next slice after deploy; decisions locked).
 
