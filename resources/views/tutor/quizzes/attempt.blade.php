@@ -3,6 +3,14 @@
 
     <div class="mx-auto max-w-3xl space-y-5">
 
+        @if (session('status'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                 class="flex items-center justify-between rounded-xl border border-success/30 bg-success/10 px-4 py-3">
+                <p class="text-sm font-semibold text-success">{{ session('status') }}</p>
+                <button @click="show = false" class="text-success cursor-pointer" aria-label="Dismiss">&times;</button>
+            </div>
+        @endif
+
         {{-- Score header --}}
         @php($pct = $attempt->total_marks > 0 ? round($attempt->obtained_marks / $attempt->total_marks * 100) : 0)
         <div class="rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm">
@@ -14,6 +22,35 @@
             @if ($attempt->completed_at)
                 <p class="mt-1 text-xs text-muted">Submitted {{ $attempt->completed_at->format('j M Y, g:ia') }}</p>
             @endif
+        </div>
+
+        {{-- Feedback to the student (only completed attempts reach this page) --}}
+        <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+                <h3 class="text-lg font-bold text-ink">Feedback for {{ $attempt->student->name }}</h3>
+                @if (filled($attempt->feedback))
+                    <span class="rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">Sent</span>
+                @endif
+            </div>
+            <p class="mt-0.5 text-sm text-muted">
+                When you send this, {{ $attempt->student->name }} gets it in their inbox as a notification.
+            </p>
+
+            <form method="POST" action="{{ route('tutor.quizzes.attempts.feedback', [$quiz, $attempt]) }}" class="mt-4">
+                @csrf
+                <textarea name="feedback" rows="4" required
+                          placeholder="e.g. Great work on the fractions questions. Revisit Q3 — re-read the question before choosing."
+                          class="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">{{ old('feedback', $attempt->feedback) }}</textarea>
+                @error('feedback')
+                    <p class="mt-1 text-xs font-semibold text-danger">{{ $message }}</p>
+                @enderror
+                <div class="mt-3 flex justify-end">
+                    <button type="submit"
+                            class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark cursor-pointer">
+                        {{ filled($attempt->feedback) ? 'Update & resend feedback' : 'Send feedback' }}
+                    </button>
+                </div>
+            </form>
         </div>
 
         {{-- Per-question review (read-only) --}}

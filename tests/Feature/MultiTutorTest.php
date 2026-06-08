@@ -160,6 +160,59 @@ it('404s when an attempt ID from a different quiz is smuggled into the URL', fun
         ->assertNotFound();
 });
 
+it('sends quiz feedback to the student as an inbox message', function () {
+    Notification::fake();
+    $tutor = tutor();
+    $studentMine = student(['tutor_id' => $tutor->id, 'name' => 'Mine Student']);
+
+    $quiz = Quiz::create([
+        'tutor_id' => $tutor->id, 'title' => 'Fractions Quiz',
+        'level' => 'Primary 4', 'subject' => 'Mathematics', 'exam_type' => 'WA1',
+    ]);
+    $attempt = QuizAttempt::create([
+        'quiz_id' => $quiz->id, 'student_id' => $studentMine->id,
+        'total_marks' => 5, 'obtained_marks' => 3, 'completed_at' => now(),
+    ]);
+
+    $this->actingAs($tutor)
+        ->post(route('tutor.quizzes.attempts.feedback', [$quiz, $attempt]), [
+            'feedback' => 'Good effort — revisit Q3.',
+        ])
+        ->assertRedirect();
+
+    expect($attempt->fresh()->feedback)->toBe('Good effort — revisit Q3.');
+    $this->assertDatabaseHas('messages', [
+        'sender_id'   => $tutor->id,
+        'receiver_id' => $studentMine->id,
+        'subject'     => 'Feedback on your quiz: Fractions Quiz',
+        'body'        => 'Good effort — revisit Q3.',
+    ]);
+});
+
+it('404s and writes no message when a tutor feeds back on another tutor\'s attempt', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentB = student(['tutor_id' => $tutorB->id]);
+
+    $quizB = Quiz::create([
+        'tutor_id' => $tutorB->id, 'title' => 'B Quiz',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $attemptB = QuizAttempt::create([
+        'quiz_id' => $quizB->id, 'student_id' => $studentB->id,
+        'total_marks' => 2, 'obtained_marks' => 2, 'completed_at' => now(),
+    ]);
+
+    $this->actingAs($tutorA)
+        ->post(route('tutor.quizzes.attempts.feedback', [$quizB, $attemptB]), [
+            'feedback' => 'Sneaky cross-tenant feedback',
+        ])
+        ->assertNotFound();
+
+    expect($attemptB->fresh()->feedback)->toBeNull();
+    expect(\App\Models\Message::count())->toBe(0);
+});
+
 // ---- Admin: tutor account management ---------------------------------------
 
 it('lets only the super_admin reach tutor management', function () {

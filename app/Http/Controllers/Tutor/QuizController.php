@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Tutor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuizRequest;
+use App\Models\Message;
 use App\Models\Quiz;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -108,6 +110,40 @@ class QuizController extends Controller
         $answersByQuestion = $attempt->answers->keyBy('question_id');
 
         return view('tutor.quizzes.attempt', compact('quiz', 'attempt', 'answersByQuestion'));
+    }
+
+    /**
+     * Save the tutor's feedback on a completed attempt and notify the student —
+     * the feedback lands in their inbox as a Message (plus a best-effort push).
+     */
+    public function feedback(Request $request, Quiz $quiz, QuizAttempt $attempt): RedirectResponse
+    {
+        $this->ensureOwned($quiz);
+        abort_unless($attempt->quiz_id === $quiz->id, 404);
+        // Feedback is only for students who have actually submitted.
+        abort_unless($attempt->isCompleted(), 404);
+
+        $validated = $request->validate([
+            'feedback' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $attempt->update(['feedback' => $validated['feedback']]);
+
+        // Auto-message the student so it shows up in their inbox like a notice.
+        $message = Message::create([
+            'sender_id'   => auth()->id(),
+            'receiver_id' => $attempt->student_id,
+            'subject'     => "Feedback on your quiz: {$quiz->title}",
+            'body'        => $validated['feedback'],
+        ]);
+
+        try {
+            $message->receiver?->notify(new NewMessageNotification($message));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return back()->with('status', 'Feedback sent — the student has been notified in their inbox.');
     }
 
     /**

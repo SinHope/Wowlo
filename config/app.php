@@ -60,12 +60,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions. Wowlo serves
+    | Singapore tutors, so we default to Singapore time (UTC+8) — this is
+    | what `now()` writes and what timestamps display as across the app.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Singapore'),
 
     /*
     |--------------------------------------------------------------------------

@@ -122,6 +122,7 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
         Route::get('quizzes/questions/{question}/image', [TutorQuizController::class, 'questionImage'])->name('quizzes.questions.image');
         Route::get('quizzes/{quiz}', [TutorQuizController::class, 'show'])->name('quizzes.show');
         Route::get('quizzes/{quiz}/attempts/{attempt}', [TutorQuizController::class, 'attempt'])->name('quizzes.attempts.show');
+        Route::post('quizzes/{quiz}/attempts/{attempt}/feedback', [TutorQuizController::class, 'feedback'])->name('quizzes.attempts.feedback');
         Route::post('quizzes/{quiz}/assign', [TutorQuizController::class, 'assign'])->name('quizzes.assign');
         Route::delete('quizzes/{quiz}', [TutorQuizController::class, 'destroy'])->name('quizzes.destroy');
     });
