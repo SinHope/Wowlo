@@ -102,3 +102,4 @@ Restore into a scratch database first and verify before ever restoring over prod
 - ❌ Trust a client-submitted total, mark, or `tutor_id`.
 - ❌ Add a list value without updating its CHECK constraint.
 - ❌ Run a destructive migration on prod without a fresh backup.
+- ❌ Blanket-shift a live timestamp column for a timezone change without a backup **and** a clean cutoff between old (UTC) and new (local) rows — without it you double-shift the rows already written in the new zone. The app is single-region `Asia/Singapore` today; the move to UTC storage + per-user timezone is [SCALABILITY.md](SCALABILITY.md) §9.

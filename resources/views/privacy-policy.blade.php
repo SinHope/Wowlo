@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Privacy Policy — Wowlo</title>
+    <x-seo-meta
+        title="Privacy Policy — Wowlo"
+        description="How Wowlo collects, uses and protects personal data for tutors, students and parents — in line with Singapore's PDPA." />
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=nunito:300,400,600,700,800&display=swap" rel="stylesheet" />
@@ -118,7 +120,13 @@
             @foreach ($policy as $code => $lang)
                 <div x-show="lang === '{{ $code }}'" x-cloak>
                     <div class="mb-8 text-center">
-                        <h1 class="text-3xl font-bold text-primary-dark">{{ $lang['title'] }}</h1>
+                        {{-- One H1 per page: the English title is the H1; the other three
+                             official-language versions use H2 (same visual size). --}}
+                        @if ($code === 'en')
+                            <h1 class="text-3xl font-bold text-primary-dark">{{ $lang['title'] }}</h1>
+                        @else
+                            <h2 class="text-3xl font-bold text-primary-dark">{{ $lang['title'] }}</h2>
+                        @endif
                         <p class="mt-1 text-sm text-muted">{{ $lang['updated'] }}: {{ date('d F Y') }}</p>
                     </div>
 

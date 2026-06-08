@@ -39,6 +39,32 @@ Route::get('/how-to-use', function () {
     return view('how-to-use');
 })->name('how-to-use');
 
+// XML sitemap — the public, indexable marketing pages only (everything else is
+// auth-gated and must stay out of the index). Built dynamically so it uses the
+// current host (works on onrender.com today and a custom domain later).
+Route::get('/sitemap.xml', function () {
+    $pages = [
+        ['loc' => url('/'),                'changefreq' => 'weekly',  'priority' => '1.0'],
+        ['loc' => route('how-to-use'),     'changefreq' => 'monthly', 'priority' => '0.8'],
+        ['loc' => route('about'),          'changefreq' => 'monthly', 'priority' => '0.7'],
+        ['loc' => route('contact'),        'changefreq' => 'yearly',  'priority' => '0.5'],
+        ['loc' => route('privacy-policy'), 'changefreq' => 'yearly',  'priority' => '0.3'],
+    ];
+
+    $xml  = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+    foreach ($pages as $p) {
+        $xml .= "  <url>\n"
+              . '    <loc>'.e($p['loc'])."</loc>\n"
+              . '    <changefreq>'.$p['changefreq']."</changefreq>\n"
+              . '    <priority>'.$p['priority']."</priority>\n"
+              . "  </url>\n";
+    }
+    $xml .= '</urlset>'."\n";
+
+    return response($xml, 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap');
+
 // Public "Contact us" page. Submission is rate-limited against spam/abuse.
 Route::get('/contact', [ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])

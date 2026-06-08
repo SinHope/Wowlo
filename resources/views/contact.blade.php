@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Get in touch with Wowlo — questions about the tuition app, tutor access, or anything else.">
-
-    <title>Contact Us — Wowlo</title>
+    <x-seo-meta
+        title="Contact Us — Wowlo"
+        description="Get in touch with Wowlo — questions about the tuition app, tutor access, or anything else." />
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">

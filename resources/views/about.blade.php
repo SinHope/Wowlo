@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Wowlo is a tuition-management app built in Singapore that keeps homework, messages, fees, past-year papers and quizzes in one place for tutors, students and parents.">
-
-    <title>About Wowlo — Tuition, all in one place.</title>
+    <x-seo-meta
+        title="About Wowlo — Tuition, all in one place."
+        description="Wowlo is a tuition-management app built in Singapore that keeps homework, messages, fees, past-year papers and quizzes in one place for tutors, students and parents." />
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">

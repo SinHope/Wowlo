@@ -45,5 +45,6 @@ Laravel 13 · PHP 8.4 (Laravel Herd, Windows) · Blade · Tailwind CSS v3 · Alp
 - Run `php artisan migrate` only after creating/changing a migration file — not after every change.
 - Files (homework, exam papers, quiz diagrams) go to the private R2 bucket; DB stores the object key; downloads stream through an authorized controller route (never a public URL).
 - Server always recomputes money/marks (never trusts client-submitted totals).
+- **Timezone: single-region (Singapore).** `config/app.php` is `Asia/Singapore` (UTC+8) — `now()` and all timestamp displays are SGT. Don't hardcode offsets like `+8` anywhere. Going multi-region (e.g. a tutor in Japan) means switching to UTC storage + a per-user timezone — see [`docs/SCALABILITY.md`](docs/SCALABILITY.md) §9; don't build per-user timezones before there's a real cross-region user.
 - Tests required for: authorization/data-isolation and fee/billing calculation. Manual for the rest.
 - UI: Heroicons SVGs (no emojis), `cursor-pointer` on clickables, status by text + color, `[x-cloak]` to avoid Alpine flashes.

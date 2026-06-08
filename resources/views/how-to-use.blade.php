@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="A quick guide to using Wowlo — how students and tutors find homework, messages, fees, past-year papers and quizzes, all in one place.">
-
-    <title>How to use Wowlo</title>
+    <x-seo-meta
+        title="How to use Wowlo — Student &amp; Tutor Guide"
+        description="A quick guide to using Wowlo — how students and tutors find homework, messages, fees, past-year papers and quizzes, all in one place." />
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -229,6 +229,55 @@
 
                 <p class="mt-4 text-center text-sm text-muted">Tip: use the arrows, or swipe left/right on touch.</p>
             </div>
+
+            {{-- ── FAQ (static, crawlable; drives FAQPage schema below) ── --}}
+            @php
+                // Single source of truth: the visible Q&A and the FAQPage JSON-LD
+                // are both rendered from this array, so they can never drift apart.
+                $faqs = [
+                    ['q' => 'What is Wowlo?',
+                     'a' => 'Wowlo is a tuition-management app for Singapore. It brings homework, messages, tuition fees, past-year exam papers and MCQ quizzes together in one place for a tutor and their students and parents.'],
+                    ['q' => 'Who can use Wowlo?',
+                     'a' => 'Private tutors in Singapore, together with their students and parents. Each tutor manages their own students, and each student or parent sees only their own homework, messages, fees and quizzes.'],
+                    ['q' => 'How do I get a Wowlo account?',
+                     'a' => 'Your tutor creates your account for you — there is no public sign-up yet. After your first login, open your Profile and set your own password so the account stays yours alone.'],
+                    ['q' => 'Is my data private and secure?',
+                     'a' => 'Yes. A student can only ever see their own records, and a tutor can only see their own students. Data is stored in a secure Singapore-region database over HTTPS, and uploaded files are kept in private cloud storage. See our Privacy Policy for the full PDPA details.'],
+                    ['q' => 'How much does Wowlo cost?',
+                     'a' => 'Wowlo is currently free to use.'],
+                    ['q' => 'Can I use Wowlo on my phone?',
+                     'a' => 'Yes. Wowlo is a Progressive Web App (PWA), so you can install it on your phone’s home screen and use it like a normal app.'],
+                    ['q' => 'How do quizzes work?',
+                     'a' => 'Your tutor assigns MCQ quizzes. You take them in the app and they are marked instantly, so you can review what you missed and write corrections to help it stick.'],
+                ];
+            @endphp
+
+            <section class="mx-auto mt-16 max-w-3xl" aria-labelledby="faq-heading">
+                <h2 id="faq-heading" class="text-center text-2xl font-extrabold tracking-tight sm:text-3xl">
+                    Frequently asked questions
+                </h2>
+                <div class="mt-8 space-y-4">
+                    @foreach ($faqs as $faq)
+                        <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                            <h3 class="text-base font-bold text-ink sm:text-lg">{{ $faq['q'] }}</h3>
+                            <p class="mt-2 text-base leading-relaxed text-muted">{{ $faq['a'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
+            {{-- FAQPage structured data — built from the same $faqs array as above. --}}
+            <script type="application/ld+json">
+                @php echo json_encode([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'FAQPage',
+                    'mainEntity' => array_map(fn ($f) => [
+                        '@type' => 'Question',
+                        'name' => $f['q'],
+                        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f['a']],
+                    ], $faqs),
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); @endphp
+            </script>
         </div>
     </main>
 

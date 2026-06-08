@@ -95,7 +95,22 @@ Files go to the private Cloudflare R2 bucket; the DB stores only the object key;
 
 ---
 
-## 9. Growth checklist (pull the lever when you hit the stage)
+## 9. Time & timezones (single-region today, per-user later)
+
+Wowlo is Singapore-only today, so the app runs on **one fixed timezone**: `config/app.php` sets `'timezone' => env('APP_TIMEZONE', 'Asia/Singapore')` (UTC+8). `now()` writes Singapore time and every timestamp displays in Singapore time. Simple and correct while every tutor and student is in SGT.
+
+**This stops working the moment a user is in another timezone.** A tutor in Tokyo (UTC+9) or a student travelling would see times that are an hour or more off, because the app assumes everyone is in Singapore. Before Wowlo serves more than one region, switch to the standard model:
+
+- **Store everything in UTC.** Set the app timezone back to `UTC` so the database is timezone-neutral — one unambiguous instant per row. (Doing this *after* data exists in SGT requires a one-time, maintenance-mode backfill that shifts the already-stored values; see [DATABASE.md](DATABASE.md) — never blanket-shift a live table without a backup and a clean UTC/local cutoff.)
+- **Convert at display time, per user.** Add a `users.timezone` column (default `Asia/Singapore`), let users pick theirs, and render with `->timezone($user->timezone)` (e.g. a `formatLocal()` helper or a Blade component) instead of raw `->format()`. Never bake a fixed offset like `+8` into code.
+- **Keep date-only fields date-only.** Homework `due_date`, `payment_date`, `billing_month` have no time component and must stay timezone-agnostic — a due date is "the 5th" everywhere, not an instant to convert.
+- **Be careful with "today" logic.** Anything that buckets by day (dashboards, "due today", monthly bills) must compute the day boundary in the *user's* timezone once this lands, or a 11pm-SGT action lands on the wrong day for a user elsewhere.
+
+Until then, the single `Asia/Singapore` setting is the right call — don't add per-user timezones before there's a real cross-region user.
+
+---
+
+## 10. Growth checklist (pull the lever when you hit the stage)
 
 - [x] Index every tenant-scoping FK *(done — migration `2026_06_04_000000`)*
 - [ ] Eager-load relations on every new list view *(ongoing habit)*
@@ -105,3 +120,4 @@ Files go to the private Cloudflare R2 bucket; the DB stores only the object key;
 - [ ] Queue email + web-push; chunk roster-wide jobs
 - [ ] Add `EXPLAIN ANALYZE` to any page that feels slow; index what's scanning
 - [ ] Leave Neon free tier for a paid compute (and a read replica) at the Big stage
+- [ ] Move to UTC storage + per-user timezone *before* the first non-Singapore user (§9)

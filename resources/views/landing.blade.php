@@ -3,9 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Wowlo — your tutor's homework, messages, tuition fees, exam papers and quizzes, all in one friendly app.">
 
-    <title>Wowlo — Tuition, organised.</title>
+    <x-seo-meta
+        title="Wowlo — Tuition, organised."
+        description="Wowlo — your tutor's homework, messages, tuition fees, exam papers and quizzes, all in one friendly app." />
 
     <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
 
@@ -32,6 +33,38 @@
             'logo' => asset('images/logo/wowlo_logo.png'),
             'description' => 'Wowlo is a tuition-management app built in Singapore that brings homework, messages, tuition fees, past-year papers and quizzes together in one place for tutors, students and parents.',
             'areaServed' => ['@type' => 'Country', 'name' => 'Singapore'],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); @endphp
+    </script>
+
+    {{-- The site as an entity (publisher = the Organization above, via @id). --}}
+    <script type="application/ld+json">
+        @php echo json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            '@id' => url('/').'/#website',
+            'url' => url('/'),
+            'name' => 'Wowlo',
+            'description' => 'Tuition-management app for Singapore tutors, students and parents.',
+            'inLanguage' => 'en-SG',
+            'publisher' => ['@id' => url('/').'/#organization'],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); @endphp
+    </script>
+
+    {{-- Wowlo is a (free) educational web application — the most relevant type. --}}
+    <script type="application/ld+json">
+        @php echo json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebApplication',
+            '@id' => url('/').'/#webapp',
+            'name' => 'Wowlo',
+            'url' => url('/'),
+            'applicationCategory' => 'EducationalApplication',
+            'operatingSystem' => 'Web browser',
+            'browserRequirements' => 'Requires a modern web browser with JavaScript.',
+            'description' => 'Wowlo brings homework, messages, tuition fees, past-year exam papers and quizzes into one app for Singapore tutors and their students.',
+            'inLanguage' => 'en-SG',
+            'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'SGD'],
+            'publisher' => ['@id' => url('/').'/#organization'],
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); @endphp
     </script>
 

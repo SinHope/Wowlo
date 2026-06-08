@@ -1,0 +1,21 @@
+# Wowlo
+
+> Wowlo is a tuition-management web app for Singapore. It brings homework, messages, tuition fees, past-year exam papers and MCQ quizzes together in one place for a private tutor and their students and parents. Built in Singapore; PDPA-aware. Accounts are created by the tutor (no public sign-up yet), and each student sees only their own data.
+
+## Key facts
+- **What:** All-in-one tuition-management app (homework, messages, fees, exam papers, quizzes).
+- **Who:** Private tutors in Singapore, plus their students and parents.
+- **Where:** Singapore. Data stored in a Singapore-region database over HTTPS.
+- **Cost:** Currently free.
+- **Access:** Installable Progressive Web App (PWA). Accounts are tutor-provisioned; students set their own password on first login.
+- **Privacy:** Strict data isolation — a student only ever sees their own homework, messages, fees and quizzes; a tutor only sees their own students.
+
+## Public pages
+- [Home](https://wowlo.onrender.com/): Overview of what Wowlo does.
+- [About Wowlo](https://wowlo.onrender.com/about): Background and the Singapore origin story.
+- [How to use Wowlo](https://wowlo.onrender.com/how-to-use): Step-by-step guide for students and tutors, plus FAQs.
+- [Contact](https://wowlo.onrender.com/contact): Get in touch.
+- [Privacy Policy](https://wowlo.onrender.com/privacy-policy): How personal data is handled, in line with Singapore's PDPA (English, Malay, Chinese, Tamil).
+
+## Notes
+- The application itself (dashboards for tutors and students) is private and requires login; only the pages listed above are public.
