@@ -92,3 +92,24 @@ A natural ask came up: instead of the tour staying on the dashboard and *naming*
 - If they say they'd rather be walked into each section → **revisit in Phase 2**, most likely starting with option 1 ("Show me" links — small, safe, additive) before considering option 2.
 
 This keeps us from building immersive tour machinery nobody has asked for yet. Phase 2 is also where public tutor sign-up lands (see architecture §H, MT5), so onboarding polish is a natural fit to reassess then.
+
+---
+
+## 7. Public "How to use" page (`/how-to-use`)
+
+A **public** companion to the in-app tour — the *same* walkthrough, shown inline on a page so prospective users and parents can see how Wowlo works **without logging in**.
+
+- **Route:** `GET /how-to-use` → `how-to-use` view (in `routes/web.php`, public).
+- **View:** `resources/views/how-to-use.blade.php` — self-contained (its own nav/footer, the step content in a `@php` block, and a small `howToUse()` Alpine component).
+- **Audience toggle:** a **For students / For tutors** switch (the page is public, so it can't read a logged-in role — it offers both). Each shows that audience's steps as an inline carousel (Back/Next, swipe), ending with a **Log in** CTA.
+- **Linked from:** the landing nav (desktop + mobile hamburger) and the landing/how-to-use footers, as **"How to use"**.
+
+### Screenshots (optional, graceful)
+Each step may name screenshot files (the `'imgs'` arrays in `how-to-use.blade.php`). They're resolved with a `file_exists()` check against **`public/images/how-to-use/`** — a screenshot shows **only if the file is present**, otherwise the card falls back to its icon. So you can add/replace screenshots anytime (`.jpeg`/`.png`, named as in the `imgs` arrays, e.g. `student-dashboard.jpeg`, `tutor-finance.jpeg`) without touching code or risking a broken image.
+
+### ⚠️ Keep the two tours in sync
+The step wording/content is **duplicated** between:
+- `resources/views/partials/onboarding.blade.php` (the in-app, role-based modal), and
+- `resources/views/how-to-use.blade.php` (this public, toggle-based page).
+
+If you change a step's title/body or add/remove a step in one, **mirror it in the other** so the in-app tour and the public guide stay consistent. (They were intentionally kept as separate files — one is a logged-in modal keyed off role, the other a public page with a manual toggle — rather than a shared partial, to keep each simple.)
