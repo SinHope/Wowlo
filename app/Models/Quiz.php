@@ -41,6 +41,16 @@ class Quiz extends Model
     }
 
     /**
+     * Does this quiz contain any short-answer question? Such a quiz can't be
+     * fully auto-marked — the tutor has to grade it. Used to derive the
+     * "needs marking" state without a quizzes.type column.
+     */
+    public function hasShortAnswers(): bool
+    {
+        return $this->questions->contains(fn ($q) => $q->isShortAnswer());
+    }
+
+    /**
      * Human-readable exam-type label from config.
      */
     public function examTypeLabel(): string

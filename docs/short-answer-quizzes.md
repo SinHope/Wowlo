@@ -1,8 +1,10 @@
 # Wowlo — Short-Answer Quizzes + Manual Grading (Spec)
 
-**Status:** 🔵 **Planned — the next slice after deploy (Slice 12).** Decided 2026-06-04: deploy the current app first (Slice 11), then build this. It is **cleanly additive**, so shipping it post-launch is safe.
+**Status:** ✅ **Built (Slice 12, 2026-06-09).** Implemented to this spec. Tests: `tests/Feature/ShortAnswerQuizTest.php` + isolation cases in `tests/Feature/MultiTutorTest.php`.
 
-This is the build blueprint. When we start the slice, build to this doc.
+**As-built note (one deviation):** the spec proposed a new `quiz_attempts.tutor_remarks` column for overall remarks. Since the spec was written, a `quiz_attempts.feedback` column + a "send feedback" flow (that messages the student) were added. We **reused `feedback`** as the overall-remarks field instead of adding `tutor_remarks` — same concept, less schema. Grading sets `feedback` and notifies the student via the shared `notifyStudentFeedback()` path. Everything else below matches the build.
+
+This is the build blueprint.
 
 > Companion docs: [FEATURE_CHANGES.md](FEATURE_CHANGES.md) (additive change pattern — short answer was the worked example) · [DATABASE.md](DATABASE.md) (migration rules) · [SECURITY.md](SECURITY.md) §5 (upload rules) · [TESTING.md](TESTING.md).
 

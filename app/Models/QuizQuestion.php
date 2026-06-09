@@ -29,6 +29,16 @@ class QuizQuestion extends Model
         return $this->hasMany(QuizAnswer::class, 'question_id');
     }
 
+    public function isShortAnswer(): bool
+    {
+        return $this->question_type === 'short_answer';
+    }
+
+    public function isMcq(): bool
+    {
+        return $this->question_type === 'mcq';
+    }
+
     /**
      * The option text for a given letter (A/B/C/D).
      */

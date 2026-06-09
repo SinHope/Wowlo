@@ -43,16 +43,25 @@
                         </div>
                     @endif
 
-                    <div class="mt-4 space-y-2">
-                        @foreach (['A', 'B', 'C', 'D'] as $letter)
-                            <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 text-sm transition-colors hover:bg-primary/5 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                                <input type="radio" name="answers[{{ $question->id }}]" value="{{ $letter }}"
-                                       class="text-primary focus:ring-primary">
-                                <span class="font-bold text-muted">{{ $letter }}.</span>
-                                <span class="text-ink">{{ $question->optionText($letter) }}</span>
-                            </label>
-                        @endforeach
-                    </div>
+                    @if ($question->isShortAnswer())
+                        <div class="mt-4">
+                            <textarea name="answers[{{ $question->id }}]" rows="3"
+                                      placeholder="Type your answer…"
+                                      class="block w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                            <p class="mt-1 text-xs text-muted">Your tutor will mark this answer.</p>
+                        </div>
+                    @else
+                        <div class="mt-4 space-y-2">
+                            @foreach (['A', 'B', 'C', 'D'] as $letter)
+                                <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 text-sm transition-colors hover:bg-primary/5 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                                    <input type="radio" name="answers[{{ $question->id }}]" value="{{ $letter }}"
+                                           class="text-primary focus:ring-primary">
+                                    <span class="font-bold text-muted">{{ $letter }}.</span>
+                                    <span class="text-ink">{{ $question->optionText($letter) }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @endforeach
 

@@ -4,6 +4,7 @@ use App\Models\Bill;
 use App\Models\ExamPaper;
 use App\Models\Homework;
 use App\Models\Quiz;
+use App\Models\QuizAnswer;
 use App\Models\QuizAssignment;
 use App\Models\QuizAttempt;
 use App\Models\User;
@@ -211,6 +212,76 @@ it('404s and writes no message when a tutor feeds back on another tutor\'s attem
 
     expect($attemptB->fresh()->feedback)->toBeNull();
     expect(\App\Models\Message::count())->toBe(0);
+});
+
+// ---- Short-answer grading isolation (Slice 12) -----------------------------
+
+it('404s when a tutor opens or grades another tutor\'s attempt', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentB = student(['tutor_id' => $tutorB->id]);
+
+    $quizB = Quiz::create([
+        'tutor_id' => $tutorB->id, 'title' => 'B Quiz',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $questionB = $quizB->questions()->create([
+        'question_text' => 'Explain.', 'question_type' => 'short_answer',
+        'correct_answer' => null, 'marks' => 3, 'order' => 0,
+    ]);
+    $attemptB = QuizAttempt::create([
+        'quiz_id' => $quizB->id, 'student_id' => $studentB->id,
+        'total_marks' => 3, 'obtained_marks' => 0, 'completed_at' => now(),
+    ]);
+    $answerB = QuizAnswer::create([
+        'attempt_id' => $attemptB->id, 'question_id' => $questionB->id,
+        'student_answer' => 'mine', 'is_correct' => false, 'marks_awarded' => 0,
+    ]);
+
+    // The other tutor can neither view the grading page nor submit grades.
+    $this->actingAs($tutorA)
+        ->get(route('tutor.quizzes.attempts.grade', [$quizB, $attemptB]))
+        ->assertNotFound();
+
+    $this->actingAs($tutorA)
+        ->post(route('tutor.quizzes.attempts.grade.save', [$quizB, $attemptB]), [
+            'grades' => [$answerB->id => 'correct'], 'marks' => [$answerB->id => 3],
+        ])
+        ->assertNotFound();
+
+    // Nothing was graded.
+    expect($attemptB->fresh()->graded_at)->toBeNull()
+        ->and($answerB->fresh()->grade)->toBeNull();
+});
+
+it('404s when a student opens another student\'s feedback image', function () {
+    $tutor = tutor();
+    $studentA = student(['tutor_id' => $tutor->id]);
+    $studentB = student(['tutor_id' => $tutor->id]);
+
+    $quiz = Quiz::create([
+        'tutor_id' => $tutor->id, 'title' => 'Q',
+        'level' => 'Primary 4', 'subject' => 'Science', 'exam_type' => 'WA1',
+    ]);
+    $question = $quiz->questions()->create([
+        'question_text' => 'Explain.', 'question_type' => 'short_answer',
+        'correct_answer' => null, 'marks' => 3, 'order' => 0,
+    ]);
+    $attemptA = QuizAttempt::create([
+        'quiz_id' => $quiz->id, 'student_id' => $studentA->id,
+        'total_marks' => 3, 'obtained_marks' => 3, 'completed_at' => now(), 'graded_at' => now(),
+    ]);
+    $answerA = QuizAnswer::create([
+        'attempt_id' => $attemptA->id, 'question_id' => $question->id,
+        'student_answer' => 'a', 'grade' => 'correct', 'marks_awarded' => 3,
+        'tutor_feedback_image_path' => 'quiz-feedback/secret.png',
+        'tutor_feedback_image_name' => 'secret.png',
+    ]);
+
+    // Student B (not the owner of the attempt) cannot reach A's feedback image.
+    $this->actingAs($studentB)
+        ->get(route('student.quizzes.answers.feedback-image', $answerA))
+        ->assertNotFound();
 });
 
 // ---- Admin: tutor account management ---------------------------------------

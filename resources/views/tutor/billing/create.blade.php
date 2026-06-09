@@ -5,7 +5,7 @@
          x-data="billingForm({
             students: {{ Illuminate\Support\Js::from($students) }},
             currency: @js($currency),
-            paynow: @js($paynow),
+            paymentInstructions: @js($paymentInstructions),
             defaultMonth: @js(now()->format('Y-m')),
          })">
 
@@ -171,7 +171,7 @@
             return {
                 students: config.students,
                 currency: config.currency || 'SGD',
-                paynow: config.paynow,
+                paymentInstructions: config.paymentInstructions,
                 studentId: '',
                 billingMonth: config.defaultMonth,
                 lessons: [{ lesson_date: '', hours: '' }],
@@ -250,9 +250,10 @@
                     lines.push('');
                     lines.push(`*Grand total due: ${this.money(this.grandTotal)}*`);
 
-                    if (this.paynow) {
+                    const payment = (this.paymentInstructions || '').trim();
+                    if (payment) {
                         lines.push('');
-                        lines.push(`PayNow: ${this.paynow}`);
+                        lines.push(payment);
                     }
                     lines.push('Thank you!');
 

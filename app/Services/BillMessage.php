@@ -12,7 +12,7 @@ class BillMessage
 {
     public static function for(Bill $bill): string
     {
-        $bill->loadMissing(['student', 'lines', 'charges']);
+        $bill->loadMissing(['student', 'lines', 'charges', 'tutor']);
 
         $cur = $bill->currency;
         $money = fn ($n) => $cur.' '.number_format((float) $n, 2);
@@ -47,9 +47,11 @@ class BillMessage
         $lines[] = '';
         $lines[] = "*Grand total due: {$money($bill->grand_total)}*";
 
-        if ($paynow = config('wowlo.paynow_number')) {
+        // The tutor's own payment line (PayNow, bank transfer, etc.), set in their
+        // profile. Blank → no payment line is shown.
+        if ($payment = trim((string) $bill->tutor?->payment_instructions)) {
             $lines[] = '';
-            $lines[] = "PayNow: {$paynow}";
+            $lines[] = $payment;
         }
 
         $lines[] = 'Thank you!';

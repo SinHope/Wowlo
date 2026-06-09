@@ -24,6 +24,8 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
     // Always set server-side (auth()->id() or null). Request rules never include
     // it, so validated() strips any client-supplied value before create/update.
     'tutor_id',
+    'phone_number',          // the tutor's own contact number
+    'payment_instructions',  // tutor's payment line for WhatsApp bills
     'phone_1',
     'phone_2',
     'phone_3',

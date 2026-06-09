@@ -4,7 +4,12 @@
     <div class="mx-auto max-w-3xl">
         @if ($errors->any())
             <div class="mb-5 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3">
-                <p class="text-sm font-semibold text-danger">Please fix the errors below.</p>
+                <p class="text-sm font-semibold text-danger">Your quiz wasn't saved — please fix:</p>
+                <ul class="mt-1 list-disc space-y-0.5 pl-5 text-xs text-danger">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -109,30 +114,54 @@
                                         class="text-xs font-semibold text-danger hover:underline cursor-pointer">Remove</button>
                             </div>
 
+                            {{-- Question type: MCQ (auto-marked) or short answer (you mark it) --}}
+                            <div class="mb-3 flex flex-wrap gap-2">
+                                <template x-for="t in [{v:'mcq',label:'Multiple choice'},{v:'short_answer',label:'Short answer'}]" :key="t.v">
+                                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors"
+                                           :class="q.question_type === t.v ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 text-muted hover:bg-gray-50'">
+                                        <input type="radio" :name="`questions[${qi}][question_type]`" :value="t.v"
+                                               x-model="q.question_type" class="text-primary focus:ring-primary">
+                                        <span x-text="t.label"></span>
+                                    </label>
+                                </template>
+                            </div>
+
                             {{-- Question text --}}
                             <textarea :name="`questions[${qi}][question_text]`" x-model="q.question_text" rows="2" required
                                       placeholder="Enter the question…"
                                       class="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
 
-                            {{-- Options A–D, each with a "correct" radio --}}
-                            <div class="mt-3 space-y-2">
-                                <template x-for="letter in ['A','B','C','D']" :key="letter">
-                                    <div class="flex items-center gap-2">
-                                        <label class="flex items-center gap-1.5 text-xs font-bold text-muted cursor-pointer">
-                                            <input type="radio" :name="`questions[${qi}][correct_answer]`" :value="letter"
-                                                   x-model="q.correct_answer" required
-                                                   class="text-primary focus:ring-primary">
-                                            <span x-text="letter"></span>
-                                        </label>
-                                        <input type="text" :name="`questions[${qi}][option_${letter.toLowerCase()}]`"
-                                               x-model="q.options[letter]" required
-                                               :placeholder="`Option ${letter}`"
-                                               class="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                               :class="q.correct_answer === letter && 'border-success bg-success/5'">
-                                    </div>
-                                </template>
-                                <p class="text-xs text-muted">Select the radio next to the correct option.</p>
-                            </div>
+                            {{-- MCQ: options A–D, each with a "correct" radio --}}
+                            <template x-if="q.question_type === 'mcq'">
+                                <div class="mt-3 space-y-2">
+                                    <template x-for="letter in ['A','B','C','D']" :key="letter">
+                                        <div class="flex items-center gap-2">
+                                            <label class="flex items-center gap-1.5 text-xs font-bold text-muted cursor-pointer">
+                                                <input type="radio" :name="`questions[${qi}][correct_answer]`" :value="letter"
+                                                       x-model="q.correct_answer"
+                                                       class="text-primary focus:ring-primary">
+                                                <span x-text="letter"></span>
+                                            </label>
+                                            <input type="text" :name="`questions[${qi}][option_${letter.toLowerCase()}]`"
+                                                   x-model="q.options[letter]"
+                                                   :placeholder="`Option ${letter}`"
+                                                   class="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                                   :class="q.correct_answer === letter && 'border-success bg-success/5'">
+                                        </div>
+                                    </template>
+                                    <p class="text-xs text-muted">Select the radio next to the correct option.</p>
+                                </div>
+                            </template>
+
+                            {{-- Short answer: nothing to fill — you'll mark it after students submit --}}
+                            <template x-if="q.question_type === 'short_answer'">
+                                <div class="mt-3 rounded-lg bg-amber/5 px-3 py-2.5">
+                                    <p class="text-xs text-muted">
+                                        Students type a free-text answer. There's no auto-marking — you'll grade each
+                                        submission (Correct / Partial / Wrong) and award marks yourself.
+                                    </p>
+                                </div>
+                            </template>
 
                             {{-- Optional diagram/attachment --}}
                             <div class="mt-3">
@@ -223,6 +252,7 @@
             let uid = 0;
             const blank = () => ({
                 uid: uid++,
+                question_type: 'mcq',
                 question_text: '',
                 options: { A: '', B: '', C: '', D: '' },
                 correct_answer: '',
@@ -234,6 +264,7 @@
             if (oldQuestions.length) {
                 questions = oldQuestions.map(q => ({
                     uid: uid++,
+                    question_type: q.question_type ?? 'mcq',
                     question_text: q.question_text ?? '',
                     options: {
                         A: q.option_a ?? '', B: q.option_b ?? '',
@@ -284,10 +315,13 @@
                         const q = this.questions[i];
                         const n = i + 1;
                         if (! q.question_text.trim())  return this.fail(`Question ${n}: please enter the question.`);
-                        for (const L of ['A', 'B', 'C', 'D']) {
-                            if (! (q.options[L] || '').trim()) return this.fail(`Question ${n}: Option ${L} is empty.`);
+                        // Options + a correct answer only matter for MCQs.
+                        if (q.question_type === 'mcq') {
+                            for (const L of ['A', 'B', 'C', 'D']) {
+                                if (! (q.options[L] || '').trim()) return this.fail(`Question ${n}: Option ${L} is empty.`);
+                            }
+                            if (! q.correct_answer)    return this.fail(`Question ${n}: select the correct answer.`);
                         }
-                        if (! q.correct_answer)        return this.fail(`Question ${n}: select the correct answer.`);
                         if (! q.marks || q.marks < 1)  return this.fail(`Question ${n}: marks must be at least 1.`);
                     }
 

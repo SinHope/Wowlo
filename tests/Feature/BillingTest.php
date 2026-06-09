@@ -125,6 +125,50 @@ it('rejects a bill for a non-student', function () {
     ])->assertSessionHasErrors('student_id');
 });
 
+it('puts the tutor\'s own payment instructions into the bill message', function () {
+    $tutor = tutor(['payment_instructions' => 'PayNow: 9123 4567']);
+    $student = studentWithRate(50, $tutor);
+
+    $bill = Bill::create([
+        'student_id' => $student->id, 'tutor_id' => $tutor->id,
+        'billing_month' => '2026-06-01', 'lessons_subtotal' => 50, 'additional_total' => 0,
+        'charges_total' => 50, 'outstanding_before' => 0, 'grand_total' => 50, 'currency' => 'SGD',
+    ]);
+
+    expect(App\Services\BillMessage::for($bill))->toContain('PayNow: 9123 4567');
+});
+
+it('omits the payment line when the tutor has no payment instructions', function () {
+    $tutor = tutor(['payment_instructions' => null]);
+    $student = studentWithRate(50, $tutor);
+
+    $bill = Bill::create([
+        'student_id' => $student->id, 'tutor_id' => $tutor->id,
+        'billing_month' => '2026-06-01', 'lessons_subtotal' => 50, 'additional_total' => 0,
+        'charges_total' => 50, 'outstanding_before' => 0, 'grand_total' => 50, 'currency' => 'SGD',
+    ]);
+
+    $message = App\Services\BillMessage::for($bill);
+    expect($message)->not->toContain('PayNow')
+        ->and($message)->toContain('Thank you!');
+});
+
+it('uses each tutor\'s own payment instructions, never another tutor\'s', function () {
+    $tutorA = tutor(['payment_instructions' => 'Bank transfer A — 111']);
+    tutor(['payment_instructions' => 'Bank transfer B — 222']); // a different tutor
+    $studentA = studentWithRate(50, $tutorA);
+
+    $billA = Bill::create([
+        'student_id' => $studentA->id, 'tutor_id' => $tutorA->id,
+        'billing_month' => '2026-06-01', 'lessons_subtotal' => 50, 'additional_total' => 0,
+        'charges_total' => 50, 'outstanding_before' => 0, 'grand_total' => 50, 'currency' => 'SGD',
+    ]);
+
+    expect(App\Services\BillMessage::for($billA))
+        ->toContain('Bank transfer A — 111')
+        ->not->toContain('222');
+});
+
 it('drops empty additional-charge rows', function () {
     $tutor = tutor();
     $student = studentWithRate(50, $tutor);

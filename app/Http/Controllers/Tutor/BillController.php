@@ -51,7 +51,8 @@ class BillController extends Controller
         return view('tutor.billing.create', [
             'students' => $students,
             'currency' => config('wowlo.currency'),
-            'paynow' => config('wowlo.paynow_number'),
+            // The acting tutor's own payment line, mirrored into the live preview.
+            'paymentInstructions' => auth()->user()->payment_instructions,
         ]);
     }
 

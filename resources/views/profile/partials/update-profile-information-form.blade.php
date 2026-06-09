@@ -47,6 +47,28 @@
             @endif
         </div>
 
+        @if ($user->actsAsTutor())
+            <div>
+                <x-input-label for="phone_number" :value="__('Phone Number')" />
+                <x-text-input id="phone_number" name="phone_number" type="text" class="mt-1 block w-full"
+                              :value="old('phone_number', $user->phone_number)" autocomplete="tel"
+                              placeholder="e.g. 9123 4567" />
+                <p class="mt-1 text-sm text-gray-600">{{ __('Your own contact number.') }}</p>
+                <x-input-error class="mt-2" :messages="$errors->get('phone_number')" />
+            </div>
+
+            <div>
+                <x-input-label for="payment_instructions" :value="__('Payment Instructions')" />
+                <textarea id="payment_instructions" name="payment_instructions" rows="3"
+                          class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                          placeholder="e.g. PayNow: 9123 4567">{{ old('payment_instructions', $user->payment_instructions) }}</textarea>
+                <p class="mt-1 text-sm text-gray-600">
+                    {{ __('Added to the bottom of every WhatsApp bill so parents know how to pay (e.g. PayNow, bank transfer). Leave blank to omit.') }}
+                </p>
+                <x-input-error class="mt-2" :messages="$errors->get('payment_instructions')" />
+            </div>
+        @endif
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

@@ -18,6 +18,8 @@
 
         @forelse ($quizzes as $quiz)
             @php($attempt = $attempts->get($quiz->id))
+            {{-- Share the already-loaded quiz so isGraded()/percentage() don't re-query. --}}
+            @php($attempt?->setRelation('quiz', $quiz))
             <div class="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <svg class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
@@ -35,9 +37,13 @@
                 </div>
 
                 <div class="flex shrink-0 flex-col items-end gap-2">
-                    @if ($attempt && $attempt->isCompleted())
+                    @if ($attempt && $attempt->isCompleted() && ! $attempt->isGraded())
+                        <span class="rounded-full bg-amber/10 px-3 py-1 text-xs font-semibold text-amber-600">Awaiting marking</span>
+                        <a href="{{ route('student.quizzes.result', $quiz) }}"
+                           class="text-xs font-semibold text-primary hover:underline cursor-pointer">View &rarr;</a>
+                    @elseif ($attempt && $attempt->isCompleted())
                         <span class="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
-                            {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }}
+                            {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }} · {{ $attempt->percentage() }}%
                         </span>
                         <a href="{{ route('student.quizzes.result', $quiz) }}"
                            class="text-xs font-semibold text-primary hover:underline cursor-pointer">View results &rarr;</a>

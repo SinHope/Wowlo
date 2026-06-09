@@ -79,12 +79,12 @@ it('auto-marks a submission correctly', function () {
     $attempt = QuizAttempt::where('quiz_id', $quiz->id)->where('student_id', $student->id)->first();
 
     expect($attempt->total_marks)->toBe(5)
-        ->and($attempt->obtained_marks)->toBe(2)
+        ->and($attempt->obtained_marks)->toBe(2.0) // marks are fractional-capable now
         ->and($attempt->completed_at)->not->toBeNull()
         ->and($attempt->answers)->toHaveCount(2);
 
     $a1 = $attempt->answers->firstWhere('question_id', $q1->id);
-    expect($a1->is_correct)->toBeTrue()->and($a1->marks_awarded)->toBe(2);
+    expect($a1->is_correct)->toBeTrue()->and($a1->marks_awarded)->toBe(2.0);
 });
 
 it('awards full marks for all-correct', function () {
@@ -99,7 +99,7 @@ it('awards full marks for all-correct', function () {
     ]);
 
     $attempt = QuizAttempt::firstWhere('quiz_id', $quiz->id);
-    expect($attempt->obtained_marks)->toBe(5);
+    expect($attempt->obtained_marks)->toBe(5.0);
 });
 
 it('treats an unanswered question as wrong', function () {
@@ -114,7 +114,7 @@ it('treats an unanswered question as wrong', function () {
     ]);
 
     $attempt = QuizAttempt::firstWhere('quiz_id', $quiz->id);
-    expect($attempt->obtained_marks)->toBe(2);
+    expect($attempt->obtained_marks)->toBe(2.0);
     $a2 = $attempt->answers->firstWhere('question_id', $q2->id);
     expect($a2->student_answer)->toBeNull()->and($a2->is_correct)->toBeFalse();
 });
@@ -141,7 +141,7 @@ it('redirects to results and blocks a re-submit once completed', function () {
     ])->assertRedirect(route('student.quizzes.result', $quiz));
 
     expect(QuizAttempt::where('quiz_id', $quiz->id)->count())->toBe(1)
-        ->and(QuizAttempt::firstWhere('quiz_id', $quiz->id)->obtained_marks)->toBe(5);
+        ->and(QuizAttempt::firstWhere('quiz_id', $quiz->id)->obtained_marks)->toBe(5.0);
 });
 
 it('cannot view another student\'s result', function () {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\QuizRequest;
 use App\Models\Message;
 use App\Models\Quiz;
+use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Models\QuizQuestion;
 use App\Notifications\NewMessageNotification;
@@ -22,7 +23,14 @@ class QuizController extends Controller
     public function index(): View
     {
         $quizzes = Quiz::where('tutor_id', auth()->id())
-            ->withCount(['questions', 'assignments', 'attempts'])
+            ->withCount([
+                'questions', 'assignments', 'attempts',
+                // Submitted short-answer attempts still awaiting this tutor's marking.
+                'attempts as to_mark_count' => fn ($q) => $q
+                    ->whereNotNull('completed_at')
+                    ->whereNull('graded_at')
+                    ->whereHas('quiz.questions', fn ($qq) => $qq->where('question_type', 'short_answer')),
+            ])
             ->latest('id')
             ->paginate(15);
 
@@ -54,14 +62,17 @@ class QuizController extends Controller
 
             $order = 0;
             foreach ($data['questions'] as $q) {
+                $isMcq = $q['question_type'] === 'mcq';
+
                 $attrs = [
                     'question_text'  => $q['question_text'],
-                    'question_type'  => 'mcq',
-                    'option_a'       => $q['option_a'],
-                    'option_b'       => $q['option_b'],
-                    'option_c'       => $q['option_c'],
-                    'option_d'       => $q['option_d'],
-                    'correct_answer' => $q['correct_answer'],
+                    'question_type'  => $q['question_type'],
+                    // MCQ carries options + a correct answer; short answers carry none.
+                    'option_a'       => $isMcq ? $q['option_a'] : null,
+                    'option_b'       => $isMcq ? $q['option_b'] : null,
+                    'option_c'       => $isMcq ? $q['option_c'] : null,
+                    'option_d'       => $isMcq ? $q['option_d'] : null,
+                    'correct_answer' => $isMcq ? $q['correct_answer'] : null,
                     'marks'          => $q['marks'],
                     'order'          => $order++,
                 ];
@@ -88,10 +99,15 @@ class QuizController extends Controller
 
         $quiz->load(['questions', 'attempts.student']);
 
+        // Share the already-loaded quiz with each attempt so needsMarking()/
+        // isGraded() in the view don't trigger a query per row.
+        $quiz->attempts->each(fn (QuizAttempt $a) => $a->setRelation('quiz', $quiz));
+
         $students = auth()->user()->students()->orderBy('name')->get(['id', 'name']);
         $assignedIds = $quiz->assignments()->pluck('student_id')->all();
+        $attemptsByStudent = $quiz->attempts->keyBy('student_id');
 
-        return view('tutor.quizzes.show', compact('quiz', 'students', 'assignedIds'));
+        return view('tutor.quizzes.show', compact('quiz', 'students', 'assignedIds', 'attemptsByStudent'));
     }
 
     /**
@@ -129,21 +145,131 @@ class QuizController extends Controller
 
         $attempt->update(['feedback' => $validated['feedback']]);
 
-        // Auto-message the student so it shows up in their inbox like a notice.
-        $message = Message::create([
-            'sender_id'   => auth()->id(),
-            'receiver_id' => $attempt->student_id,
-            'subject'     => "Feedback on your quiz: {$quiz->title}",
-            'body'        => $validated['feedback'],
-        ]);
-
-        try {
-            $message->receiver?->notify(new NewMessageNotification($message));
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        $this->notifyStudentFeedback($quiz, $attempt, $validated['feedback']);
 
         return back()->with('status', 'Feedback sent — the student has been notified in their inbox.');
+    }
+
+    /**
+     * The grading page for a submitted attempt — see each answer, mark every
+     * short answer (Correct/Partial/Wrong + marks), add per-question feedback,
+     * and write overall remarks.
+     */
+    public function grade(Quiz $quiz, QuizAttempt $attempt): View
+    {
+        $this->ensureOwned($quiz);
+        abort_unless($attempt->quiz_id === $quiz->id, 404);
+        abort_unless($attempt->isCompleted(), 404);
+
+        $quiz->load('questions');
+        $attempt->load('student', 'answers');
+        $answersByQuestion = $attempt->answers->keyBy('question_id');
+
+        return view('tutor.quizzes.grade', compact('quiz', 'attempt', 'answersByQuestion'));
+    }
+
+    /**
+     * Save the tutor's marking. Recomputes obtained marks server-side from the
+     * per-question marks awarded, stamps graded_at, stores overall remarks, and
+     * notifies the student.
+     */
+    public function saveGrade(Request $request, Quiz $quiz, QuizAttempt $attempt): RedirectResponse
+    {
+        $this->ensureOwned($quiz);
+        abort_unless($attempt->quiz_id === $quiz->id, 404);
+        abort_unless($attempt->isCompleted(), 404);
+
+        $attempt->load('answers.question');
+
+        // Marks may be awarded in half-steps (schools give 1/2 for partial answers).
+        $halfStep = function (string $attribute, $value, $fail) {
+            if (fmod((float) $value * 2, 1.0) !== 0.0) {
+                $fail('Marks must be a whole number or a half (e.g. 0.5, 1, 1.5).');
+            }
+        };
+
+        // Build per-answer rules so short answers must get a grade + valid marks,
+        // and any answer may carry feedback text + a (jpg/png) feedback image.
+        $rules = ['remarks' => ['nullable', 'string', 'max:2000']];
+        foreach ($attempt->answers as $answer) {
+            $rules["tutor_feedback.{$answer->id}"]  = ['nullable', 'string', 'max:2000'];
+            $rules["feedback_image.{$answer->id}"]  = ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:10240'];
+            if ($answer->question->isShortAnswer()) {
+                $rules["grades.{$answer->id}"] = ['required', Rule::in(['correct', 'partial', 'wrong'])];
+                $rules["marks.{$answer->id}"]  = ['required', 'numeric', 'min:0', 'max:' . $answer->question->marks, $halfStep];
+            }
+        }
+
+        $validated = $request->validate($rules, [
+            'grades.*.required' => 'Mark every short answer.',
+            'marks.*.required'  => 'Enter the marks awarded.',
+            'marks.*.max'       => 'Marks cannot exceed the question total.',
+        ]);
+
+        $remarks = $validated['remarks'] ?? null;
+
+        DB::transaction(function () use ($request, $attempt, $remarks) {
+            $obtained = 0;
+
+            foreach ($attempt->answers as $answer) {
+                $update = [
+                    'tutor_feedback' => $request->input("tutor_feedback.{$answer->id}") ?: null,
+                ];
+
+                if ($answer->question->isShortAnswer()) {
+                    $grade = $request->input("grades.{$answer->id}");
+                    // Clamp as a server-side safety net on top of validation.
+                    $marks = max(0, min((float) $request->input("marks.{$answer->id}"), $answer->question->marks));
+
+                    $update['grade']         = $grade;
+                    $update['marks_awarded'] = $marks;
+                    $update['is_correct']    = $grade === 'correct';
+                }
+
+                // Optional drawn explanation → private R2 bucket (replaces any old one).
+                if ($request->hasFile("feedback_image.{$answer->id}")) {
+                    if ($answer->tutor_feedback_image_path) {
+                        Storage::disk('r2')->delete($answer->tutor_feedback_image_path);
+                    }
+                    $file = $request->file("feedback_image.{$answer->id}");
+                    $update['tutor_feedback_image_path'] = $file->store('quiz-feedback', 'r2');
+                    $update['tutor_feedback_image_name'] = $file->getClientOriginalName();
+                }
+
+                $answer->update($update);
+                $obtained += $answer->marks_awarded;
+            }
+
+            $attempt->update([
+                'obtained_marks' => $obtained,
+                'graded_at'      => now(),
+                'feedback'       => $remarks,
+            ]);
+        });
+
+        // Notify the student that their quiz is marked (with remarks if given).
+        $this->notifyStudentFeedback(
+            $quiz,
+            $attempt,
+            filled($remarks)
+                ? $remarks
+                : "Your quiz \"{$quiz->title}\" has been marked — tap to see your results and feedback.",
+        );
+
+        return redirect()->route('tutor.quizzes.show', $quiz)
+            ->with('status', "Marked {$attempt->student->name}'s quiz — they've been notified.");
+    }
+
+    /**
+     * Stream a per-answer tutor-feedback image from R2 (owning tutor only).
+     */
+    public function feedbackImage(QuizAnswer $answer): StreamedResponse
+    {
+        abort_unless($answer->hasTutorFeedbackImage(), 404);
+        // Tenancy: the answer's quiz must belong to the acting teacher.
+        abort_unless($answer->question->quiz->tutor_id === auth()->id(), 404);
+
+        return Storage::disk('r2')->response($answer->tutor_feedback_image_path, $answer->tutor_feedback_image_name);
     }
 
     /**
@@ -211,5 +337,25 @@ class QuizController extends Controller
     private function ensureOwned(Quiz $quiz): void
     {
         abort_unless($quiz->tutor_id === auth()->id(), 404);
+    }
+
+    /**
+     * Drop the feedback into the student's inbox as a Message (+ best-effort
+     * push), so it surfaces like a notice. Shared by feedback() and saveGrade().
+     */
+    private function notifyStudentFeedback(Quiz $quiz, QuizAttempt $attempt, string $body): void
+    {
+        $message = Message::create([
+            'sender_id'   => auth()->id(),
+            'receiver_id' => $attempt->student_id,
+            'subject'     => "Feedback on your quiz: {$quiz->title}",
+            'body'        => $body,
+        ]);
+
+        try {
+            $message->receiver?->notify(new NewMessageNotification($message));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

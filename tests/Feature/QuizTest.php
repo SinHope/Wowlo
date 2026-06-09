@@ -19,6 +19,7 @@ function quizPayload(array $overrides = []): array
         'exam_type' => 'WA1',
         'questions' => [
             [
+                'question_type'  => 'mcq',
                 'question_text'  => 'What do plants need to make food?',
                 'option_a'       => 'Sunlight',
                 'option_b'       => 'Darkness',
@@ -28,6 +29,7 @@ function quizPayload(array $overrides = []): array
                 'marks'          => 2,
             ],
             [
+                'question_type'  => 'mcq',
                 'question_text'  => 'Which gas do plants absorb?',
                 'option_a'       => 'Oxygen',
                 'option_b'       => 'Carbon dioxide',

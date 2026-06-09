@@ -33,6 +33,24 @@ test('profile information can be updated', function () {
     $this->assertNull($user->email_verified_at);
 });
 
+test('a tutor can save their phone number and payment instructions', function () {
+    $tutor = tutor();
+
+    $this->actingAs($tutor)
+        ->patch('/profile', [
+            'name' => $tutor->name,
+            'email' => $tutor->email,
+            'phone_number' => '9123 4567',
+            'payment_instructions' => 'PayNow: 9123 4567',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect('/profile');
+
+    $tutor->refresh();
+    expect($tutor->phone_number)->toBe('9123 4567')
+        ->and($tutor->payment_instructions)->toBe('PayNow: 9123 4567');
+});
+
 test('email verification status is unchanged when the email address is unchanged', function () {
     $user = User::factory()->create();
 

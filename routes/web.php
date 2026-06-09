@@ -141,14 +141,19 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
         Route::delete('exam-papers/{examPaper}', [TutorExamPaperController::class, 'destroy'])->name('exam-papers.destroy');
         Route::get('exam-papers/{examPaper}/download', [TutorExamPaperController::class, 'download'])->name('exam-papers.download');
 
-        // Quizzes — create MCQ quizzes, assign to students, view results.
+        // Quizzes — create MCQ + short-answer quizzes, assign, grade, view results.
         Route::get('quizzes', [TutorQuizController::class, 'index'])->name('quizzes.index');
         Route::get('quizzes/create', [TutorQuizController::class, 'create'])->name('quizzes.create');
         Route::post('quizzes', [TutorQuizController::class, 'store'])->name('quizzes.store');
         Route::get('quizzes/questions/{question}/image', [TutorQuizController::class, 'questionImage'])->name('quizzes.questions.image');
+        // Per-answer tutor-feedback image (drawn explanation) — authorized stream.
+        Route::get('quizzes/answers/{answer}/feedback-image', [TutorQuizController::class, 'feedbackImage'])->name('quizzes.answers.feedback-image');
         Route::get('quizzes/{quiz}', [TutorQuizController::class, 'show'])->name('quizzes.show');
         Route::get('quizzes/{quiz}/attempts/{attempt}', [TutorQuizController::class, 'attempt'])->name('quizzes.attempts.show');
         Route::post('quizzes/{quiz}/attempts/{attempt}/feedback', [TutorQuizController::class, 'feedback'])->name('quizzes.attempts.feedback');
+        // Manual grading of short-answer submissions.
+        Route::get('quizzes/{quiz}/attempts/{attempt}/grade', [TutorQuizController::class, 'grade'])->name('quizzes.attempts.grade');
+        Route::post('quizzes/{quiz}/attempts/{attempt}/grade', [TutorQuizController::class, 'saveGrade'])->name('quizzes.attempts.grade.save');
         Route::post('quizzes/{quiz}/assign', [TutorQuizController::class, 'assign'])->name('quizzes.assign');
         Route::delete('quizzes/{quiz}', [TutorQuizController::class, 'destroy'])->name('quizzes.destroy');
     });
@@ -184,6 +189,8 @@ Route::middleware(['auth', 'verified', 'role:student'])
         // Quizzes — take assigned quizzes, view results, write corrections.
         Route::get('quizzes', [StudentQuizController::class, 'index'])->name('quizzes.index');
         Route::get('quizzes/questions/{question}/image', [StudentQuizController::class, 'questionImage'])->name('quizzes.questions.image');
+        // The tutor's drawn feedback image on one of this student's answers.
+        Route::get('quizzes/answers/{answer}/feedback-image', [StudentQuizController::class, 'feedbackImage'])->name('quizzes.answers.feedback-image');
         Route::get('quizzes/{quiz}', [StudentQuizController::class, 'show'])->name('quizzes.show');
         Route::post('quizzes/{quiz}/submit', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
         Route::get('quizzes/{quiz}/result', [StudentQuizController::class, 'result'])->name('quizzes.result');

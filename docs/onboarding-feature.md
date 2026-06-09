@@ -130,3 +130,8 @@ The step wording/content is **duplicated** between:
 - `resources/views/how-to-use.blade.php` (this public, toggle-based page).
 
 If you change a step's title/body or add/remove a step in one, **mirror it in the other** so the in-app tour and the public guide stay consistent. (They were intentionally kept as separate files — one is a logged-in modal keyed off role, the other a public page with a manual toggle — rather than a shared partial, to keep each simple.)
+
+### SEO: FAQ section + `FAQPage` schema (below the tour)
+The page also carries a **static FAQ** section (seven Q&As) beneath the carousel, plus matching **`FAQPage`** JSON-LD. This is the page's main SEO / AI-Overview asset — unlike the Alpine carousel (whose copy is JS-rendered), the FAQ is plain crawlable HTML.
+
+> ⚠️ Both the visible FAQ cards **and** the schema render from a single `$faqs` array in `how-to-use.blade.php`. **Edit the array, never the JSON-LD by hand** — that's what keeps the visible text and the structured data identical (Google rejects `FAQPage` markup that doesn't match on-page text). Keep the answers accurate to how Wowlo actually works (free, tutor-provisioned accounts, data isolation, PWA). Context: [`seo-audit/ACTION-PLAN.md`](../seo-audit/ACTION-PLAN.md) item M2.

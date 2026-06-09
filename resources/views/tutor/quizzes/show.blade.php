@@ -70,29 +70,45 @@
             @endif
         </div>
 
-        {{-- Results --}}
+        {{-- Submissions — every assigned student + their status --}}
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-ink">Results</h3>
-            @forelse ($quiz->attempts as $attempt)
-                @if ($attempt->isCompleted())
+            <h3 class="text-lg font-bold text-ink">Submissions</h3>
+            @php($assignedStudents = $students->whereIn('id', $assignedIds))
+            @forelse ($assignedStudents as $student)
+                @php($attempt = $attemptsByStudent->get($student->id))
+                @if (! $attempt)
+                    <div class="mt-3 flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
+                        <span class="font-semibold text-ink">{{ $student->name }}</span>
+                        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-muted">Not attempted</span>
+                    </div>
+                @elseif ($attempt->needsMarking())
+                    <a href="{{ route('tutor.quizzes.attempts.grade', [$quiz, $attempt]) }}"
+                       class="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber/30 bg-amber/5 px-4 py-3 hover:bg-amber/10 cursor-pointer">
+                        <span class="font-semibold text-ink">{{ $student->name }}</span>
+                        <span class="flex items-center gap-2">
+                            <span class="rounded-full bg-amber/10 px-3 py-1 text-xs font-bold text-amber-600">Awaiting marking</span>
+                            <span class="text-sm font-semibold text-primary">Mark now &rarr;</span>
+                        </span>
+                    </a>
+                @elseif ($attempt->isGraded())
                     <a href="{{ route('tutor.quizzes.attempts.show', [$quiz, $attempt]) }}"
                        class="mt-3 flex items-center justify-between gap-3 rounded-lg border border-gray-100 px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                        <span class="font-semibold text-ink">{{ $attempt->student->name }}</span>
+                        <span class="font-semibold text-ink">{{ $student->name }}</span>
                         <span class="flex items-center gap-2">
                             <span class="rounded-full bg-success/10 px-3 py-1 text-sm font-bold text-success">
-                                {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }}
+                                {{ $attempt->obtained_marks }} / {{ $attempt->total_marks }} · {{ $attempt->percentage() }}%
                             </span>
                             <span class="text-sm font-semibold text-primary">View answers &rarr;</span>
                         </span>
                     </a>
                 @else
                     <div class="mt-3 flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
-                        <span class="font-semibold text-ink">{{ $attempt->student->name }}</span>
+                        <span class="font-semibold text-ink">{{ $student->name }}</span>
                         <span class="rounded-full bg-amber/10 px-3 py-1 text-xs font-semibold text-amber-600">In progress</span>
                     </div>
                 @endif
             @empty
-                <p class="mt-3 text-sm text-muted">No attempts yet.</p>
+                <p class="mt-3 text-sm text-muted">No students assigned yet.</p>
             @endforelse
         </div>
 
@@ -123,21 +139,27 @@
                             </div>
                         @endif
 
-                        <div class="mt-2 space-y-1">
-                            @foreach (['A', 'B', 'C', 'D'] as $letter)
-                                <div @class([
-                                    'flex items-center gap-2 rounded-md px-2 py-1 text-sm',
-                                    'bg-success/10 font-semibold text-success' => $question->correct_answer === $letter,
-                                    'text-ink' => $question->correct_answer !== $letter,
-                                ])>
-                                    <span class="font-bold">{{ $letter }}.</span>
-                                    <span>{{ $question->optionText($letter) }}</span>
-                                    @if ($question->correct_answer === $letter)
-                                        <svg class="ml-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                        @if ($question->isShortAnswer())
+                            <p class="mt-2 inline-flex items-center gap-1.5 rounded-md bg-amber/10 px-2 py-1 text-xs font-semibold text-amber-600">
+                                Short answer — marked manually
+                            </p>
+                        @else
+                            <div class="mt-2 space-y-1">
+                                @foreach (['A', 'B', 'C', 'D'] as $letter)
+                                    <div @class([
+                                        'flex items-center gap-2 rounded-md px-2 py-1 text-sm',
+                                        'bg-success/10 font-semibold text-success' => $question->correct_answer === $letter,
+                                        'text-ink' => $question->correct_answer !== $letter,
+                                    ])>
+                                        <span class="font-bold">{{ $letter }}.</span>
+                                        <span>{{ $question->optionText($letter) }}</span>
+                                        @if ($question->correct_answer === $letter)
+                                            <svg class="ml-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>
