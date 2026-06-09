@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    {{-- Google Search Console ownership verification (public token, not a secret). --}}
+    <meta name="google-site-verification" content="iaSNDLdpyKI8Ry3DWkjKwQ606WKBFlAAf7TE37qNJuk" />
+
     <x-seo-meta
         title="Wowlo — Tuition, organised."
         description="Wowlo — your tutor's homework, messages, tuition fees, exam papers and quizzes, all in one friendly app." />
