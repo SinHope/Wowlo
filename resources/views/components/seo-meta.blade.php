@@ -1,15 +1,13 @@
 @props([
     'title',
     'description',
-    // Default share image. NOTE: this is the square 512px app icon as a safe
-    // fallback — replace with a dedicated 1200×630 image at
-    // images/og/wowlo-og.png for proper large-card previews.
+    // Default share image (1200×630-style large card). Pages can override per-page.
     'image' => null,
     'type' => 'website',
 ])
 
 @php
-    $ogImage = $image ?? asset('images/pwa/icon-512.png');
+    $ogImage = $image ?? asset('images/og/wowlo-og.png');
     // Self-referencing canonical, query-string stripped (drops ?utm_* etc.).
     $canonical = url()->current();
 @endphp
