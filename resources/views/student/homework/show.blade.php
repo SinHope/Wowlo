@@ -36,7 +36,7 @@
 
             <div class="mt-6">
                 <p class="font-semibold text-muted">Instructions</p>
-                <p class="mt-1 whitespace-pre-line text-ink">{{ $homework->description }}</p>
+                <p class="mt-1 whitespace-pre-line text-ink">{{ \App\Support\Linkify::links($homework->description) }}</p>
             </div>
 
             @if ($homework->hasAttachment())
