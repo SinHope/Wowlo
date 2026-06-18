@@ -21,6 +21,7 @@ class Homework extends Model
         'due_date',
         'status',
         'completed_at',
+        'feedback',
         'attachment_path',
         'attachment_name',
     ];
@@ -47,6 +48,32 @@ class Homework extends Model
     public function isDone(): bool
     {
         return $this->status === 'done';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /** Student has claimed "I've done this" and is awaiting the tutor's check. */
+    public function isSubmitted(): bool
+    {
+        return $this->status === 'submitted';
+    }
+
+    /** Tutor's verdict: checked and not done. */
+    public function isNotDone(): bool
+    {
+        return $this->status === 'not_done';
+    }
+
+    /**
+     * Derived (never stored): still awaiting the student and past its due date.
+     * A 'submitted' claim is the tutor's to check, so it never reads as overdue.
+     */
+    public function isOverdue(): bool
+    {
+        return $this->isPending() && $this->due_date->lt(today());
     }
 
     public function hasAttachment(): bool

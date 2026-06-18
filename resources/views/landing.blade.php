@@ -98,6 +98,8 @@
         }
         @keyframes loader-spin { to { transform: rotate(360deg); } }
     </style>
+
+    <x-posthog />
 </head>
 <body class="bg-cream font-sans text-ink antialiased">
 

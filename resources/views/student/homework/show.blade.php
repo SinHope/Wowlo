@@ -10,7 +10,7 @@
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
             <div class="flex flex-wrap items-center gap-3">
                 <h2 class="text-2xl font-extrabold text-ink">{{ $homework->title }}</h2>
-                <x-homework-status-badge :status="$homework->status" />
+                <x-homework-status-badge :status="$homework->status" :overdue="$homework->isOverdue()" />
             </div>
 
             <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
@@ -50,22 +50,46 @@
             @endif
         </div>
 
-        <!-- Mark done / not done -->
-        <form method="POST" action="{{ route('student.homework.toggle', $homework) }}"
-              class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            @csrf
-            @method('PATCH')
+        <!-- Tutor's feedback (read-only) -->
+        @if (filled($homework->feedback))
+            <div class="rounded-2xl border border-accent/30 bg-accent/5 p-6 shadow-sm">
+                <p class="flex items-center gap-1.5 text-sm font-bold text-accent-dark">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+                    Feedback from your tutor
+                </p>
+                <p class="mt-2 whitespace-pre-line text-ink">{{ $homework->feedback }}</p>
+            </div>
+        @endif
+
+        <!-- Claim done (the tutor confirms the real verdict) -->
+        <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             @if ($homework->isDone())
-                <p class="mb-3 text-sm font-semibold text-success">✓ You marked this done{{ $homework->completed_at ? ' on '.$homework->completed_at->format('d M Y') : '' }}.</p>
-                <button type="submit" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-gray-50 cursor-pointer">
-                    Mark as Not Done
-                </button>
-            @else
-                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-success px-4 py-3 text-sm font-bold text-white transition-colors duration-200 hover:opacity-90 cursor-pointer">
+                <p class="flex items-center gap-1.5 text-sm font-semibold text-success">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-                    Mark as Done
-                </button>
+                    Your tutor marked this done{{ $homework->completed_at ? ' on '.$homework->completed_at->format('d M Y') : '' }}. 🎉
+                </p>
+            @elseif ($homework->isSubmitted())
+                <p class="mb-3 text-sm font-semibold text-primary-dark">✋ Sent to your tutor to check.</p>
+                <form method="POST" action="{{ route('student.homework.submit', $homework) }}">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-gray-50 cursor-pointer">
+                        Not done yet — withdraw
+                    </button>
+                </form>
+            @else
+                @if ($homework->isNotDone())
+                    <p class="mb-3 text-sm font-semibold text-danger">Your tutor marked this Not done. Redo it, then tell them again.</p>
+                @endif
+                <form method="POST" action="{{ route('student.homework.submit', $homework) }}">
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-success px-4 py-3 text-sm font-bold text-white transition-colors duration-200 hover:opacity-90 cursor-pointer">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                        I've done this
+                    </button>
+                </form>
             @endif
-        </form>
+        </div>
     </div>
 </x-app-layout>

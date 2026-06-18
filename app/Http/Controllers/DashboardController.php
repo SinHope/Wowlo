@@ -19,6 +19,8 @@ class DashboardController extends Controller
             return view('tutor.dashboard', [
                 'studentCount' => $user->students()->count(),
                 'pendingHomework' => \App\Models\Homework::where('tutor_id', $user->id)->where('status', 'pending')->count(),
+                // Homework a student has claimed done ('submitted'), waiting on this tutor's verdict.
+                'homeworkToCheck' => \App\Models\Homework::where('tutor_id', $user->id)->where('status', 'submitted')->count(),
                 'recentHomework' => \App\Models\Homework::where('tutor_id', $user->id)->with('student')->latest()->take(5)->get(),
                 'createdThisWeek' => \App\Models\Homework::where('tutor_id', $user->id)->where('created_at', '>=', now()->startOfWeek())->count(),
                 // Submitted short-answer quizzes still waiting on this tutor's marking.

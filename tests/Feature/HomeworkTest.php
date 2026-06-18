@@ -81,28 +81,109 @@ it('only shows a student their own homework', function () {
         ->assertForbidden();
 });
 
-it('lets a student mark their homework done and undone', function () {
+it('lets a student claim "done" (submitted) and withdraw it, but never self-confirm done', function () {
     $hw = makeHomework();
 
+    // Claim → submitted (awaiting the tutor's check), NOT done.
     $this->actingAs($hw->student)
-        ->patch(route('student.homework.toggle', $hw))
+        ->patch(route('student.homework.submit', $hw))
         ->assertRedirect();
-
-    expect($hw->fresh()->status)->toBe('done')
-        ->and($hw->fresh()->completed_at)->not->toBeNull();
-
-    $this->actingAs($hw->student)->patch(route('student.homework.toggle', $hw));
-    expect($hw->fresh()->status)->toBe('pending')
+    expect($hw->fresh()->status)->toBe('submitted')
         ->and($hw->fresh()->completed_at)->toBeNull();
+
+    // Withdraw → back to pending.
+    $this->actingAs($hw->student)->patch(route('student.homework.submit', $hw));
+    expect($hw->fresh()->status)->toBe('pending');
 });
 
-it('forbids a student from toggling someone else\'s homework', function () {
+it('does not let a student reopen a tutor-confirmed done', function () {
+    $hw = makeHomework(['status' => 'done', 'completed_at' => now()]);
+
+    $this->actingAs($hw->student)->patch(route('student.homework.submit', $hw));
+
+    expect($hw->fresh()->status)->toBe('done');
+});
+
+it('forbids a student from claiming someone else\'s homework', function () {
     $hw = makeHomework();
     $intruder = student();
 
     $this->actingAs($intruder)
-        ->patch(route('student.homework.toggle', $hw))
+        ->patch(route('student.homework.submit', $hw))
         ->assertForbidden();
+
+    expect($hw->fresh()->status)->toBe('pending');
+});
+
+it('lets the owning tutor set the done / not_done verdict with feedback', function () {
+    $tutor = tutor();
+    $student = student(['tutor_id' => $tutor->id]);
+    $hw = makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'status' => 'submitted']);
+
+    $this->actingAs($tutor)
+        ->patch(route('tutor.homework.verdict', $hw), ['status' => 'done', 'feedback' => 'Great work!'])
+        ->assertRedirect(route('tutor.homework.status', ['student_id' => $student->id]));
+
+    expect($hw->fresh()->status)->toBe('done')
+        ->and($hw->fresh()->completed_at)->not->toBeNull()
+        ->and($hw->fresh()->feedback)->toBe('Great work!');
+
+    // not_done clears the completion timestamp.
+    $this->actingAs($tutor)
+        ->patch(route('tutor.homework.verdict', $hw), ['status' => 'not_done', 'feedback' => 'Q3 missing.']);
+    expect($hw->fresh()->status)->toBe('not_done')
+        ->and($hw->fresh()->completed_at)->toBeNull();
+});
+
+it('renders the tutor status page with the verdict UI for a student', function () {
+    $tutor = tutor();
+    $student = student(['tutor_id' => $tutor->id]);
+    makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'status' => 'submitted', 'feedback' => 'Check Q4.']);
+    // An overdue one (pending + past due) to exercise the derived badge.
+    makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'due_date' => now()->subWeek()->toDateString()]);
+
+    $this->actingAs($tutor)
+        ->get(route('tutor.homework.status', ['student_id' => $student->id]))
+        ->assertOk()
+        ->assertSee('Awaiting check')
+        ->assertSee('Overdue')
+        ->assertSee('Mark Done')
+        ->assertSee('Check Q4.');
+});
+
+it('shows the tutor a "Homework to Check" count of submitted homework', function () {
+    $tutor = tutor();
+    $student = student(['tutor_id' => $tutor->id]);
+    makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'status' => 'submitted']);
+    makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'status' => 'submitted']);
+    makeHomework(['tutor_id' => $tutor->id, 'student_id' => $student->id, 'status' => 'pending']);
+    // Another tutor's submitted homework must not leak into the count.
+    $other = tutor();
+    makeHomework(['tutor_id' => $other->id, 'student_id' => student(['tutor_id' => $other->id])->id, 'status' => 'submitted']);
+
+    $this->actingAs($tutor)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertViewHas('homeworkToCheck', 2)
+        ->assertSee('Homework to Check');
+});
+
+it('rejects an invalid verdict status', function () {
+    $tutor = tutor();
+    $hw = makeHomework(['tutor_id' => $tutor->id, 'student_id' => student(['tutor_id' => $tutor->id])->id]);
+
+    $this->actingAs($tutor)
+        ->patch(route('tutor.homework.verdict', $hw), ['status' => 'pending'])
+        ->assertSessionHasErrors('status');
+});
+
+it('404s when a tutor sets a verdict on another tutor\'s homework', function () {
+    $hw = makeHomework(); // belongs to a freshly created tutor
+    $intruder = tutor();
+
+    $this->actingAs($intruder)
+        ->patch(route('tutor.homework.verdict', $hw), ['status' => 'done'])
+        ->assertNotFound();
 
     expect($hw->fresh()->status)->toBe('pending');
 });

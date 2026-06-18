@@ -110,6 +110,8 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
 
         // Homework status overview (must be declared before the resource to avoid {homework} capture)
         Route::get('homework-status', [TutorHomeworkController::class, 'status'])->name('homework.status');
+        // Tutor's authoritative verdict (done / not_done) + feedback note.
+        Route::patch('homework/{homework}/verdict', [TutorHomeworkController::class, 'verdict'])->name('homework.verdict');
         Route::get('homework/{homework}/download', [TutorHomeworkController::class, 'download'])->name('homework.download');
         Route::resource('homework', TutorHomeworkController::class)->except(['show']);
 
@@ -164,7 +166,7 @@ Route::middleware(['auth', 'verified', 'role:student'])
     ->name('student.')
     ->group(function () {
         Route::get('homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
-        Route::patch('homework/{homework}/toggle', [StudentHomeworkController::class, 'toggle'])->name('homework.toggle');
+        Route::patch('homework/{homework}/submit', [StudentHomeworkController::class, 'submit'])->name('homework.submit');
         Route::get('homework/{homework}/download', [StudentHomeworkController::class, 'download'])->name('homework.download');
         Route::get('homework/{homework}', [StudentHomeworkController::class, 'show'])->name('homework.show');
 

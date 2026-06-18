@@ -41,4 +41,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    // PostHog web analytics — public marketing pages only. The key is a
+    // publishable client-side token (safe in HTML), not a secret.
+    'posthog' => [
+        'key' => env('POSTHOG_KEY'),
+        'host' => env('POSTHOG_HOST', 'https://us.i.posthog.com'),
+    ],
+
 ];

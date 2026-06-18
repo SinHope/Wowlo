@@ -15,7 +15,7 @@ class HomeworkController extends Controller
     public function index(Request $request): View
     {
         $homework = $request->user()->homework()
-            ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END")
             ->orderBy('due_date')
             ->paginate(15);
 
@@ -30,19 +30,26 @@ class HomeworkController extends Controller
     }
 
     /**
-     * Toggle this homework between done / pending.
+     * Student claims "I've done this" (→ submitted, awaiting the tutor's check),
+     * or retracts the claim (→ pending). The student can NEVER set the
+     * authoritative done / not_done verdict — that's the tutor's call. Once the
+     * tutor has ruled 'done', the claim is locked.
      */
-    public function toggle(Homework $homework): RedirectResponse
+    public function submit(Homework $homework): RedirectResponse
     {
         $this->ensureOwner($homework);
 
-        $done = ! $homework->isDone();
-        $homework->update([
-            'status' => $done ? 'done' : 'pending',
-            'completed_at' => $done ? now() : null,
-        ]);
+        // A tutor-confirmed 'done' is final; the student can't reopen it.
+        if ($homework->isDone()) {
+            return back()->with('status', 'Your tutor has already marked this done.');
+        }
 
-        return back()->with('status', $done ? 'Marked as done. 🎉' : 'Marked as not done.');
+        $claiming = ! $homework->isSubmitted();
+        $homework->update(['status' => $claiming ? 'submitted' : 'pending']);
+
+        return back()->with('status', $claiming
+            ? "Sent to your tutor to check. ✋"
+            : 'Claim withdrawn — back to not done yet.');
     }
 
     public function download(Homework $homework): StreamedResponse

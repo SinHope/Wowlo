@@ -98,6 +98,24 @@ return [
     | upload dropdown, its validation rule, and the student filter. Add a
     | subject here and it appears everywhere. Order here is display order.
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Homework statuses
+    |--------------------------------------------------------------------------
+    | The verdict lifecycle for a homework. 'pending' is the default; the
+    | STUDENT may only claim 'submitted' (an "I've done this" claim awaiting
+    | the tutor's check); the TUTOR owns the authoritative 'done' / 'not_done'
+    | verdict. "Overdue" is NOT stored here — it's derived from due_date (see
+    | Homework::isOverdue()). Key = stored value, value = display label. This
+    | list mirrors the Postgres homeworks_status_check constraint.
+    */
+    'homework_statuses' => [
+        'pending'   => 'Pending',
+        'submitted' => 'Awaiting check',
+        'done'      => 'Done',
+        'not_done'  => 'Not done',
+    ],
+
     'subjects' => [
         'English',
         'Mathematics',

@@ -31,7 +31,7 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 
 `users.tutor_id` is the ownership backbone:
 
-- A **student** row has `tutor_id` = the owning tutor's id.
+- A **student** row has `tutor_id` = the owning tutor's id. **One tutor per student account** — a real-world student with two tutors on Wowlo uses two accounts (different emails), one per tutor. A "shared student" (one account, many tutors) is a parked future slice that would replace this column with a pivot via expand-contract: see [shared-students.md](shared-students.md).
 - A **tutor / super_admin** row has `tutor_id = NULL`.
 - Everything a student owns (homework, fees, payments, bills, quiz attempts, messages) is reachable from the student, so it inherits the student's tutor.
 - Some tables also carry `tutor_id` directly for fast scoping: `homeworks`, `bills`, `quizzes`, `exam_papers`.

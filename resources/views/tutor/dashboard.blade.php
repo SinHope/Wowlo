@@ -25,6 +25,22 @@
                 <p class="text-xs {{ $quizzesToMark > 0 ? 'text-accent-dark' : 'text-muted' }}">{{ $quizzesToMark > 0 ? 'awaiting your marking' : 'all caught up' }}</p>
             </a>
 
+            <a href="{{ route('tutor.homework.status') }}"
+               @class([
+                   'rounded-2xl border p-5 shadow-sm transition-colors duration-200 cursor-pointer',
+                   'border-accent/40 bg-accent/10 hover:bg-accent/20' => $homeworkToCheck > 0,
+                   'border-gray-100 bg-white hover:border-primary/40 hover:bg-primary/5' => $homeworkToCheck === 0,
+               ])>
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold {{ $homeworkToCheck > 0 ? 'text-accent-dark' : 'text-muted' }}">Homework to Check</p>
+                    <span class="grid h-10 w-10 place-items-center rounded-xl {{ $homeworkToCheck > 0 ? 'bg-accent/20 text-accent-dark' : 'bg-primary/10 text-primary-dark' }}">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                    </span>
+                </div>
+                <p class="mt-3 text-3xl font-extrabold {{ $homeworkToCheck > 0 ? 'text-accent-dark' : 'text-ink' }}">{{ $homeworkToCheck }}</p>
+                <p class="text-xs {{ $homeworkToCheck > 0 ? 'text-accent-dark' : 'text-muted' }}">{{ $homeworkToCheck > 0 ? 'awaiting your check' : 'all caught up' }}</p>
+            </a>
+
             <a href="{{ route('tutor.students.index') }}" class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-colors duration-200 hover:border-primary/40 hover:bg-primary/5 cursor-pointer">
                 <div class="flex items-center justify-between">
                     <p class="text-sm font-semibold text-muted">Total Students</p>
@@ -69,7 +85,7 @@
                         <p class="truncate font-semibold text-ink">{{ $hw->title }}</p>
                         <p class="truncate text-xs text-muted">{{ $hw->subject }} · {{ $hw->student->name }} · due {{ $hw->due_date->format('d M') }}</p>
                     </div>
-                    <x-homework-status-badge :status="$hw->status" />
+                    <x-homework-status-badge :status="$hw->status" :overdue="$hw->isOverdue()" />
                 </a>
             @empty
                 <div class="rounded-xl bg-cream py-10 text-center">

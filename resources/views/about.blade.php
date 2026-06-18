@@ -17,6 +17,8 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <x-posthog />
+
     {{-- Entity signals: establish "Wowlo" as a distinct brand + software entity.
          Built via json_encode so Blade never parses the @-prefixed keys as directives. --}}
     <script type="application/ld+json">

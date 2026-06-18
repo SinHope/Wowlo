@@ -22,7 +22,7 @@
                 <div class="min-w-0 flex-1">
                     <div class="flex flex-wrap items-center gap-2">
                         <p class="truncate font-bold text-ink">{{ $hw->title }}</p>
-                        <x-homework-status-badge :status="$hw->status" />
+                        <x-homework-status-badge :status="$hw->status" :overdue="$hw->isOverdue()" />
                     </div>
                     <p class="mt-0.5 truncate text-sm text-muted">{{ $hw->subject }} · due {{ $hw->due_date->format('d M Y') }}</p>
                 </div>

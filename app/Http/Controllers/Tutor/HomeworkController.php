@@ -8,6 +8,7 @@ use App\Models\Homework;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -108,6 +109,31 @@ class HomeworkController extends Controller
             : collect();
 
         return view('tutor.homework.status', compact('students', 'selectedId', 'homework'));
+    }
+
+    /**
+     * The tutor's authoritative verdict on one homework, plus an editable
+     * feedback note. Only done / not_done can be set here — the student can
+     * never reach this. Ownership-guarded (404 so IDs don't leak).
+     */
+    public function verdict(Request $request, Homework $homework): RedirectResponse
+    {
+        $this->ensureOwned($homework);
+
+        $data = $request->validate([
+            'status'   => ['required', Rule::in(['done', 'not_done'])],
+            'feedback' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $homework->update([
+            'status'       => $data['status'],
+            'completed_at' => $data['status'] === 'done' ? now() : null,
+            'feedback'     => $data['feedback'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('tutor.homework.status', ['student_id' => $homework->student_id])
+            ->with('status', $data['status'] === 'done' ? 'Marked done.' : 'Marked not done.');
     }
 
     /**
