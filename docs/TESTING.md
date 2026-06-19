@@ -122,6 +122,7 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Results page shows score and correct/wrong per question
 - [ ] Student cannot re-submit completed quiz
 - [ ] Student cannot access unassigned quiz
+- [ ] **Enter key does NOT submit early** — pressing Enter while typing in the quiz builder, the student "take quiz" page, or the grading page must not save/submit (only the Save/Submit button + confirm modal does); Enter inside a textarea still adds a newline
 
 ### Exam papers
 - [ ] Tutor uploads paper → status shows pending
@@ -136,6 +137,7 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Student builds + submits their own sheet → lands with their tutor to mark
 - [ ] Tutor marks: sets each question's marks + awarded, running total/percentage updates live; awarded can't exceed the chosen total
 - [ ] After marking, student sees per-question grade/marks + remarks; both parties get an inbox notice
+- [ ] **Enter key does NOT submit early** — pressing Enter while typing in any sheet builder or the marking page must not save/send (only the Save/Submit button + modal does); Enter inside a textarea still adds a newline
 
 ### PWA & Onboarding
 - [ ] **"Install app"** button shows on the landing + login pages (only when `PWA_PROMOTE_INSTALL=true`); native prompt on Android/desktop Chrome, "Add to Home Screen" steps on iOS

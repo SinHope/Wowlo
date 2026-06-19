@@ -31,7 +31,8 @@
             </div>
 
             <form method="POST" action="{{ route('student.resources.submit', $sheet) }}" class="space-y-4"
-                  x-data="{ confirming: false, submitting: false }">
+                  x-data="{ confirming: false, submitting: false }"
+                  @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
                 @csrf
 
                 @foreach ($sheet->questions as $i => $q)

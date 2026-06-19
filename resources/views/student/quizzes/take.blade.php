@@ -18,7 +18,8 @@
             </p>
         </div>
 
-        <form method="POST" action="{{ route('student.quizzes.submit', $quiz) }}" class="space-y-4">
+        <form method="POST" action="{{ route('student.quizzes.submit', $quiz) }}" class="space-y-4"
+              @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
 
             @foreach ($quiz->questions as $i => $question)

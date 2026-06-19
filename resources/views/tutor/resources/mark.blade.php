@@ -28,7 +28,8 @@
             <p class="mt-1 text-sm font-bold text-muted"><span x-text="pct"></span>% · running total</p>
         </div>
 
-        <form method="POST" action="{{ route('tutor.resources.mark.save', $sheet) }}" class="space-y-4">
+        <form method="POST" action="{{ route('tutor.resources.mark.save', $sheet) }}" class="space-y-4"
+              @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
 
             @foreach ($sheet->questions as $i => $q)

@@ -13,7 +13,8 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('tutor.quizzes.store') }}" enctype="multipart/form-data" x-data="quizForm()" class="space-y-5">
+        <form method="POST" action="{{ route('tutor.quizzes.store') }}" enctype="multipart/form-data" x-data="quizForm()" class="space-y-5"
+              @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
 
             {{-- Live validation banner --}}

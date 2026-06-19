@@ -43,7 +43,8 @@
         </div>
 
         <form method="POST" action="{{ route('tutor.quizzes.attempts.grade.save', [$quiz, $attempt]) }}"
-              enctype="multipart/form-data" class="space-y-4">
+              enctype="multipart/form-data" class="space-y-4"
+              @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
 
             @foreach ($quiz->questions as $i => $question)

@@ -13,7 +13,8 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('student.resources.store', $type) }}" x-data="sheetBuilder()" class="space-y-5">
+        <form method="POST" action="{{ route('student.resources.store', $type) }}" x-data="sheetBuilder()" class="space-y-5"
+              @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
 
             <div x-show="validationError" x-cloak x-transition
