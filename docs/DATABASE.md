@@ -34,7 +34,7 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 - A **student** row has `tutor_id` = the owning tutor's id. **One tutor per student account** — a real-world student with two tutors on Wowlo uses two accounts (different emails), one per tutor. A "shared student" (one account, many tutors) is a parked future slice that would replace this column with a pivot via expand-contract: see [shared-students.md](shared-students.md).
 - A **tutor / super_admin** row has `tutor_id = NULL`.
 - Everything a student owns (homework, fees, payments, bills, quiz attempts, messages) is reachable from the student, so it inherits the student's tutor.
-- Some tables also carry `tutor_id` directly for fast scoping: `homeworks`, `bills`, `quizzes`, `exam_papers`.
+- Some tables also carry `tutor_id` directly for fast scoping: `homeworks`, `bills`, `quizzes`, `exam_papers`, `answer_sheets`.
 
 **Rules when adding any tenant-owned table or feature:**
 
@@ -61,6 +61,8 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 | `quiz_assignments` | `student_id` | unique `(quiz_id, student_id)`. |
 | `quiz_attempts` | `student_id` | unique `(quiz_id, student_id)` — one attempt per quiz in MVP. Stores `total_marks`, `obtained_marks`. |
 | `quiz_answers` | via `attempt_id` | `is_correct`, `marks_awarded`. |
+| `answer_sheets` | `tutor_id` + `student_id` | **Resources** (OAS / short-answer sheets). One student per sheet, so the row IS the assignment + submission (no separate attempt/assignment tables). `author_id` = who built it (tutor or student); `type` `mcq`/`short_answer` + `status` `sent`/`submitted`/`marked` (both CHECK). `total_marks`/`obtained_marks` recomputed server-side at marking. |
+| `answer_sheet_questions` | via `answer_sheet_id` | One numbered row per question. Holds structure (`order`, `num_options`, `marks`), the student's answer (`choice` 1–N or `answer_text`), and the tutor's marking (`grade` CHECK, `marks_awarded`, `tutor_feedback`). |
 | `push_subscriptions` | `user_id` | web-push (PWA). |
 
 Files (homework attachments, exam papers, quiz diagrams) live on the **private R2 bucket**; the DB stores only the object key, and downloads stream through an authorized controller route — never a public URL.

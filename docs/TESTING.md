@@ -11,7 +11,7 @@
 | Item | Detail |
 |---|---|
 | Framework | **Pest** (wraps PHPUnit) |
-| Total tests | **123** passing (as of Slice 11 prep) |
+| Total tests | **175** passing (as of Slice 13 — Resources) |
 | Database | **In-memory SQLite** — never touches Neon in tests |
 | Run command | `php artisan test` |
 | Parallel | `php artisan test --parallel` (faster, safe) |
@@ -48,7 +48,7 @@ php artisan test --coverage
 Real files under `tests/Feature/` and the area each owns. There is **no** standalone `FileUploadTest`/`RoleMiddlewareTest`/`AuthTest` — upload validation and role enforcement are exercised *inside* the feature tests and `MultiTutorTest`.
 
 ### A. Authorisation & Tenant Isolation — `MultiTutorTest.php` ⭐ most critical
-Data must never leak between tutors or students. Covers cross-tutor isolation (a tutor can't see another tutor's students/homework/messages/finance/bills/quizzes), IDOR (route-bound records the user doesn't own return **404, not 403**), role enforcement (`tutor_id` set server-side, students blocked from tutor routes), and admin-only tutor management + exam-paper approval.
+Data must never leak between tutors or students. Covers cross-tutor isolation (a tutor can't see another tutor's students/homework/messages/finance/bills/quizzes/answer sheets), IDOR (route-bound records the user doesn't own return **404, not 403**), role enforcement (`tutor_id` set server-side, students blocked from tutor routes), and admin-only tutor management + exam-paper approval.
 
 > Add a test here for **every new cross-tenant surface** (new table, route, or controller action). This is the non-negotiable file.
 
@@ -66,6 +66,9 @@ Tutor quiz creation/assignment/results, and the student side: taking an assigned
 
 ### F. Exam Papers — `ExamPaperTest.php`
 Shared moderated library: upload goes to R2 and is **`pending`** until the super_admin approves; approved papers are visible/downloadable to students; pending papers are not; downloads require auth.
+
+### F2. Resources (answer sheets) — `AnswerSheetTest.php`
+The build → send/submit → mark flow for OAS + short-answer sheets: a tutor builds + sends to one of their own students (and can't send to another tutor's), a student fills + submits a sent sheet (MCQ choice range validated) or builds + submits their own (which resolves to their tutor), and the tutor marks it — **the tutor decides each question's marks and the totals are recomputed server-side** (awarded `lte` the chosen total). Cross-tenant isolation for sheets lives in `MultiTutorTest.php`.
 
 ### G. Push Notifications — `PushNotificationTest.php`
 Uses `Notification::fake()`. New-homework / new-message notifications fire to the right user; a push failure is caught + logged and **never** 500s the request; a user can only manage their own subscription.
@@ -125,6 +128,14 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Super admin approves → paper appears for students
 - [ ] Filter by level/subject/year works
 - [ ] Download works and file is correct
+
+### Resources (answer sheets)
+- [ ] Sidebar **Resources** expands to MCQ/OAS Sheet + Short Answers Sheet (both roles)
+- [ ] Tutor builds a sheet → **Save** prompts "which student?" → sends; student sees it under "To do"
+- [ ] Student fills + submits a sent sheet → tutor's list shows "To mark"; student sees "Awaiting marking"
+- [ ] Student builds + submits their own sheet → lands with their tutor to mark
+- [ ] Tutor marks: sets each question's marks + awarded, running total/percentage updates live; awarded can't exceed the chosen total
+- [ ] After marking, student sees per-question grade/marks + remarks; both parties get an inbox notice
 
 ### PWA & Onboarding
 - [ ] **"Install app"** button shows on the landing + login pages (only when `PWA_PROMOTE_INSTALL=true`); native prompt on Android/desktop Chrome, "Add to Home Screen" steps on iOS

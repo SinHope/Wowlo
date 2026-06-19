@@ -1,6 +1,6 @@
 # Wowlo — Project Guardrails & Conventions
 
-Wowlo is a tuition-management web app for Singapore tutors (homework, messages, tuition fees, exam papers, MCQ quizzes). **Multi-tutor (since Slice 10.5):** three roles — `super_admin` (the owner; teaches a roster AND manages tutor accounts + approves shared exam papers), `tutor` (teaches their own isolated roster), `student`/parent. Built in vertical slices per `Wowlo_v2.1_Refined_Decisions_and_Architecture.md` (authoritative — wins over `Wowlo_Tuition_Management_App_v2.md` on conflicts).
+Wowlo is a tuition-management web app for Singapore tutors (homework, messages, tuition fees, exam papers, MCQ quizzes, and Resources — OAS/short-answer sheets). **Multi-tutor (since Slice 10.5):** three roles — `super_admin` (the owner; teaches a roster AND manages tutor accounts + approves shared exam papers), `tutor` (teaches their own isolated roster), `student`/parent. Built in vertical slices per `Wowlo_v2.1_Refined_Decisions_and_Architecture.md` (authoritative — wins over `Wowlo_Tuition_Management_App_v2.md` on conflicts).
 
 ## 🔒 Security guardrails (do not violate)
 
@@ -28,6 +28,7 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - [`docs/shared-students.md`](docs/shared-students.md) — future slice for one student shared by multiple tutors (expand-contract; parked until real demand — today's answer is one account per tutor).
 - [`docs/SuperAdmin-Admin-Contact-Feature.md`](docs/SuperAdmin-Admin-Contact-Feature.md) — Phase 2 designed slice: tutor → super_admin contact form (attachment via R2), admin message filter/sort/broadcast compose, pinned amber "Messages from SuperAdmin/Admin" section for tutors. **Build from this doc.**
 - [`docs/short-answer-quizzes.md`](docs/short-answer-quizzes.md) — build spec for short-answer questions + manual grading (next slice after deploy; decisions locked).
+- [`docs/resources-answer-sheets.md`](docs/resources-answer-sheets.md) — Resources feature (Slice 13): OAS/short-answer sheets a tutor sends or a student builds, then the tutor marks per-question. **Built.**
 
 ## Stack
 

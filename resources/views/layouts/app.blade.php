@@ -24,6 +24,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>[x-cloak]{display:none!important;}</style>
     </head>
     <body class="font-sans antialiased text-ink">
         @php
@@ -43,6 +44,28 @@
                 'quiz'     => 'M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z',
                 'chat'     => 'M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155',
                 'user'     => 'M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+                'folder'   => 'M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z',
+            ];
+
+            // The "Resources" group is shared by both roles — its children link to
+            // the two answer-sheet types. The acting role decides which route prefix.
+            $resourcesPrefix = $actsAsTutor ? 'tutor.resources.' : 'student.resources.';
+            $resourcesGroup = [
+                'label'    => 'Resources',
+                'icon'     => 'folder',
+                'active'   => request()->routeIs($resourcesPrefix . '*'),
+                'children' => [
+                    [
+                        'label'  => 'MCQ/OAS Sheet',
+                        'href'   => route($resourcesPrefix . 'index', 'mcq'),
+                        'active' => request()->routeIs($resourcesPrefix . '*') && request()->route('type') === 'mcq',
+                    ],
+                    [
+                        'label'  => 'Short Answers Sheet',
+                        'href'   => route($resourcesPrefix . 'index', 'short_answer'),
+                        'active' => request()->routeIs($resourcesPrefix . '*') && request()->route('type') === 'short_answer',
+                    ],
+                ],
             ];
 
             $menu = $actsAsTutor ? array_values(array_filter([
@@ -60,6 +83,7 @@
                 ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => route('tutor.billing.index'), 'active' => request()->routeIs('tutor.billing.*')],
                 ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => route('tutor.exam-papers.index'), 'active' => request()->routeIs('tutor.exam-papers.*')],
                 ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => route('tutor.quizzes.index'), 'active' => request()->routeIs('tutor.quizzes.*')],
+                $resourcesGroup,
             ])) : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
@@ -67,6 +91,7 @@
                 ['label' => 'Tuition Fee',   'icon' => 'money', 'href' => route('student.fees.index'), 'active' => request()->routeIs('student.fees.*')],
                 ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => route('student.exam-papers.index'), 'active' => request()->routeIs('student.exam-papers.*')],
                 ['label' => 'Quizzes',       'icon' => 'quiz',  'href' => route('student.quizzes.index'), 'active' => request()->routeIs('student.quizzes.*')],
+                $resourcesGroup,
                 ['label' => 'Profile',       'icon' => 'user',  'href' => route('profile.edit'), 'active' => request()->routeIs('profile.*')],
             ];
         @endphp
@@ -88,24 +113,55 @@
 
                 <nav class="flex flex-col gap-1 p-3">
                     @foreach ($menu as $item)
-                        <a href="{{ $item['href'] }}"
-                           @class([
-                               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer',
-                               'bg-primary text-white' => $item['active'],
-                               'text-ink hover:bg-primary/10 hover:text-primary-dark' => ! $item['active'],
-                           ])>
-                            <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$item['icon']] }}" />
-                            </svg>
-                            <span class="flex-1">{{ $item['label'] }}</span>
-                            @if (! empty($item['badge']))
-                                <span @class([
-                                    'grid h-5 min-w-[1.25rem] place-items-center rounded-full px-1.5 text-xs font-bold',
-                                    'bg-white text-primary' => $item['active'],
-                                    'bg-amber text-white' => ! $item['active'],
-                                ])>{{ $item['badge'] }}</span>
-                            @endif
-                        </a>
+                        @if (! empty($item['children']))
+                            {{-- Collapsible group (e.g. Resources). Open by default when a child is active. --}}
+                            <div x-data="{ open: {{ $item['active'] ? 'true' : 'false' }} }">
+                                <button type="button" @click="open = ! open"
+                                        @class([
+                                            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer',
+                                            'text-primary-dark' => $item['active'],
+                                            'text-ink hover:bg-primary/10 hover:text-primary-dark' => ! $item['active'],
+                                        ])>
+                                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$item['icon']] }}" />
+                                    </svg>
+                                    <span class="flex-1 text-left">{{ $item['label'] }}</span>
+                                    <svg class="h-4 w-4 shrink-0 transition-transform duration-200" :class="open && 'rotate-180'"
+                                         fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                                <div x-show="open" x-cloak class="mt-1 ml-4 flex flex-col gap-1 border-l border-gray-200 pl-3">
+                                    @foreach ($item['children'] as $child)
+                                        <a href="{{ $child['href'] }}"
+                                           @class([
+                                               'rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-200 cursor-pointer',
+                                               'bg-primary text-white' => $child['active'],
+                                               'text-ink hover:bg-primary/10 hover:text-primary-dark' => ! $child['active'],
+                                           ])>{{ $child['label'] }}</a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ $item['href'] }}"
+                               @class([
+                                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer',
+                                   'bg-primary text-white' => $item['active'],
+                                   'text-ink hover:bg-primary/10 hover:text-primary-dark' => ! $item['active'],
+                               ])>
+                                <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $icons[$item['icon']] }}" />
+                                </svg>
+                                <span class="flex-1">{{ $item['label'] }}</span>
+                                @if (! empty($item['badge']))
+                                    <span @class([
+                                        'grid h-5 min-w-[1.25rem] place-items-center rounded-full px-1.5 text-xs font-bold',
+                                        'bg-white text-primary' => $item['active'],
+                                        'bg-amber text-white' => ! $item['active'],
+                                    ])>{{ $item['badge'] }}</span>
+                                @endif
+                            </a>
+                        @endif
                     @endforeach
                 </nav>
             </aside>

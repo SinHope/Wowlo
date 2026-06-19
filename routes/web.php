@@ -18,7 +18,9 @@ use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
 use App\Http\Controllers\Tutor\HomeworkController as TutorHomeworkController;
 use App\Http\Controllers\Tutor\MessageController as TutorMessageController;
 use App\Http\Controllers\Tutor\QuizController as TutorQuizController;
+use App\Http\Controllers\Tutor\ResourceSheetController as TutorResourceSheetController;
 use App\Http\Controllers\Tutor\StudentController;
+use App\Http\Controllers\Student\ResourceSheetController as StudentResourceSheetController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -158,6 +160,20 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
         Route::post('quizzes/{quiz}/attempts/{attempt}/grade', [TutorQuizController::class, 'saveGrade'])->name('quizzes.attempts.grade.save');
         Route::post('quizzes/{quiz}/assign', [TutorQuizController::class, 'assign'])->name('quizzes.assign');
         Route::delete('quizzes/{quiz}', [TutorQuizController::class, 'destroy'])->name('quizzes.destroy');
+
+        // Resources — MCQ/OAS + short-answer sheets. Tutor builds blank rows and
+        // sends to one student; the student fills + submits; the tutor marks.
+        Route::prefix('resources')->name('resources.')->group(function () {
+            // {type} is mcq | short_answer (constraint stops it eating the sheets/* paths).
+            Route::get('{type}', [TutorResourceSheetController::class, 'index'])->whereIn('type', ['mcq', 'short_answer'])->name('index');
+            Route::get('{type}/create', [TutorResourceSheetController::class, 'create'])->whereIn('type', ['mcq', 'short_answer'])->name('create');
+            Route::post('{type}', [TutorResourceSheetController::class, 'store'])->whereIn('type', ['mcq', 'short_answer'])->name('store');
+
+            Route::get('sheets/{sheet}', [TutorResourceSheetController::class, 'show'])->name('show');
+            Route::get('sheets/{sheet}/mark', [TutorResourceSheetController::class, 'mark'])->name('mark');
+            Route::post('sheets/{sheet}/mark', [TutorResourceSheetController::class, 'saveMark'])->name('mark.save');
+            Route::delete('sheets/{sheet}', [TutorResourceSheetController::class, 'destroy'])->name('destroy');
+        });
     });
 
 // Student-only area — RoleMiddleware blocks tutors from these routes.
@@ -197,6 +213,17 @@ Route::middleware(['auth', 'verified', 'role:student'])
         Route::post('quizzes/{quiz}/submit', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
         Route::get('quizzes/{quiz}/result', [StudentQuizController::class, 'result'])->name('quizzes.result');
         Route::post('quizzes/{quiz}/corrections', [StudentQuizController::class, 'saveCorrections'])->name('quizzes.corrections');
+
+        // Resources — fill a sheet a tutor sent, or build + submit your own
+        // (e.g. to record your answers to a paper exam) for the tutor to mark.
+        Route::prefix('resources')->name('resources.')->group(function () {
+            Route::get('{type}', [StudentResourceSheetController::class, 'index'])->whereIn('type', ['mcq', 'short_answer'])->name('index');
+            Route::get('{type}/create', [StudentResourceSheetController::class, 'create'])->whereIn('type', ['mcq', 'short_answer'])->name('create');
+            Route::post('{type}', [StudentResourceSheetController::class, 'store'])->whereIn('type', ['mcq', 'short_answer'])->name('store');
+
+            Route::get('sheets/{sheet}', [StudentResourceSheetController::class, 'show'])->name('show');
+            Route::post('sheets/{sheet}/submit', [StudentResourceSheetController::class, 'submit'])->name('submit');
+        });
     });
 
 require __DIR__.'/auth.php';

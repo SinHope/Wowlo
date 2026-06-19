@@ -116,6 +116,28 @@ return [
         'not_done'  => 'Not done',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Answer sheets (Resources)
+    |--------------------------------------------------------------------------
+    | "OAS / answer sheet" types and their status lifecycle. A sheet is either
+    | an MCQ/OAS sheet (numbered rows of options) or a short-answers sheet
+    | (numbered free-text rows). Status: 'sent' (tutor → student, awaiting fill),
+    | 'submitted' (awaiting the tutor's manual marking), 'marked' (done). Both
+    | lists mirror the Postgres CHECK constraints on the answer_sheets table —
+    | add a value here and you MUST update the matching constraint via migration.
+    */
+    'answer_sheet_types' => [
+        'mcq'          => 'MCQ / OAS Sheet',
+        'short_answer' => 'Short Answers Sheet',
+    ],
+
+    'answer_sheet_statuses' => [
+        'sent'      => 'Awaiting student',
+        'submitted' => 'Awaiting marking',
+        'marked'    => 'Marked',
+    ],
+
     'subjects' => [
         'English',
         'Mathematics',

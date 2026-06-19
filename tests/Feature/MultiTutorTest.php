@@ -284,6 +284,68 @@ it('404s when a student opens another student\'s feedback image', function () {
         ->assertNotFound();
 });
 
+// ---- Resources: answer sheets (Slice 13) -----------------------------------
+
+it('404s when a tutor opens, marks, or deletes another tutor\'s answer sheet', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentB = student(['tutor_id' => $tutorB->id]);
+
+    $sheetB = \App\Models\AnswerSheet::create([
+        'author_id' => $tutorB->id, 'tutor_id' => $tutorB->id, 'student_id' => $studentB->id,
+        'type' => 'mcq', 'title' => 'B Sheet', 'subject' => 'Science', 'status' => 'submitted', 'total_marks' => 1,
+    ]);
+    $sheetB->questions()->create(['order' => 0, 'num_options' => 4, 'marks' => 1, 'choice' => 1]);
+
+    $this->actingAs($tutorA)->get(route('tutor.resources.show', $sheetB))->assertNotFound();
+    $this->actingAs($tutorA)->get(route('tutor.resources.mark', $sheetB))->assertNotFound();
+    $this->actingAs($tutorA)->delete(route('tutor.resources.destroy', $sheetB))->assertNotFound();
+    $this->actingAs($tutorA)
+        ->post(route('tutor.resources.mark.save', $sheetB), ['grades' => [], 'marks' => []])
+        ->assertNotFound();
+
+    expect(\App\Models\AnswerSheet::find($sheetB->id))->not->toBeNull()
+        ->and($sheetB->fresh()->status)->toBe('submitted');
+});
+
+it('shows a tutor only their own answer sheets', function () {
+    $tutorA = tutor();
+    $studentA = student(['tutor_id' => $tutorA->id]);
+    $studentB = student(['tutor_id' => tutor()->id]);
+
+    \App\Models\AnswerSheet::create([
+        'author_id' => $tutorA->id, 'tutor_id' => $tutorA->id, 'student_id' => $studentA->id,
+        'type' => 'mcq', 'title' => 'Mine Sheet', 'subject' => 'Science', 'status' => 'sent', 'total_marks' => 0,
+    ]);
+    \App\Models\AnswerSheet::create([
+        'author_id' => $studentB->tutor_id, 'tutor_id' => $studentB->tutor_id, 'student_id' => $studentB->id,
+        'type' => 'mcq', 'title' => 'Theirs Sheet', 'subject' => 'Science', 'status' => 'sent', 'total_marks' => 0,
+    ]);
+
+    $this->actingAs($tutorA)->get(route('tutor.resources.index', 'mcq'))
+        ->assertOk()->assertSee('Mine Sheet')->assertDontSee('Theirs Sheet');
+});
+
+it('404s when a student opens or submits another student\'s sheet', function () {
+    $tutor = tutor();
+    $studentA = student(['tutor_id' => $tutor->id]);
+    $studentB = student(['tutor_id' => $tutor->id]);
+
+    $sheetA = \App\Models\AnswerSheet::create([
+        'author_id' => $tutor->id, 'tutor_id' => $tutor->id, 'student_id' => $studentA->id,
+        'type' => 'mcq', 'title' => 'A Sheet', 'subject' => 'Science', 'status' => 'sent', 'total_marks' => 1,
+    ]);
+    $qA = $sheetA->questions()->create(['order' => 0, 'num_options' => 4, 'marks' => 1]);
+
+    // Student B cannot view or submit student A's sheet.
+    $this->actingAs($studentB)->get(route('student.resources.show', $sheetA))->assertNotFound();
+    $this->actingAs($studentB)
+        ->post(route('student.resources.submit', $sheetA), ['answers' => [$qA->id => 1]])
+        ->assertNotFound();
+
+    expect($sheetA->fresh()->status)->toBe('sent');
+});
+
 // ---- Admin: tutor account management ---------------------------------------
 
 it('lets only the super_admin reach tutor management', function () {
