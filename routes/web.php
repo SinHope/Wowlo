@@ -81,6 +81,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// Games — placeholder page shared by tutors and students (feature coming soon).
+Route::view('/games', 'games')
+    ->middleware(['auth', 'verified'])
+    ->name('games');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
