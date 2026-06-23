@@ -29,6 +29,7 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - [`docs/SuperAdmin-Admin-Contact-Feature.md`](docs/SuperAdmin-Admin-Contact-Feature.md) — Phase 2 designed slice: tutor → super_admin contact form (attachment via R2), admin message filter/sort/broadcast compose, pinned amber "Messages from SuperAdmin/Admin" section for tutors. **Build from this doc.**
 - [`docs/short-answer-quizzes.md`](docs/short-answer-quizzes.md) — build spec for short-answer questions + manual grading (next slice after deploy; decisions locked).
 - [`docs/resources-answer-sheets.md`](docs/resources-answer-sheets.md) — Resources feature (Slice 13): OAS/short-answer sheets a tutor sends or a student builds, then the tutor marks per-question. **Built.**
+- [`docs/spelling-game.md`](docs/spelling-game.md) — Spelling Meow (Slice 14): the first Games-tab game. Student plays (level → fix-the-spelling → letter blanks), writes a mandatory reflection; tutor reviews + leaves feedback. Words live in `config/spelling-words.php`. **Built.**
 
 ## Stack
 

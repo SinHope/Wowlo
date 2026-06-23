@@ -12,6 +12,7 @@ use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
 use App\Http\Controllers\Student\ExamPaperController as StudentExamPaperController;
 use App\Http\Controllers\Student\QuizController as StudentQuizController;
+use App\Http\Controllers\Student\SpellingController as StudentSpellingController;
 use App\Http\Controllers\Tutor\BillController as TutorBillController;
 use App\Http\Controllers\Tutor\ExamPaperController as TutorExamPaperController;
 use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Tutor\HomeworkController as TutorHomeworkController;
 use App\Http\Controllers\Tutor\MessageController as TutorMessageController;
 use App\Http\Controllers\Tutor\QuizController as TutorQuizController;
 use App\Http\Controllers\Tutor\ResourceSheetController as TutorResourceSheetController;
+use App\Http\Controllers\Tutor\SpellingController as TutorSpellingController;
 use App\Http\Controllers\Tutor\StudentController;
 use App\Http\Controllers\Student\ResourceSheetController as StudentResourceSheetController;
 use Illuminate\Support\Facades\Route;
@@ -179,6 +181,13 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
             Route::post('sheets/{sheet}/mark', [TutorResourceSheetController::class, 'saveMark'])->name('mark.save');
             Route::delete('sheets/{sheet}', [TutorResourceSheetController::class, 'destroy'])->name('destroy');
         });
+
+        // Games — Spelling Meow. Tutor reviews their students' rounds + feedback.
+        Route::prefix('games/spelling')->name('games.spelling.')->group(function () {
+            Route::get('/', [TutorSpellingController::class, 'index'])->name('index');
+            Route::get('{attempt}', [TutorSpellingController::class, 'show'])->name('show');
+            Route::post('{attempt}/feedback', [TutorSpellingController::class, 'feedback'])->name('feedback');
+        });
     });
 
 // Student-only area — RoleMiddleware blocks tutors from these routes.
@@ -228,6 +237,15 @@ Route::middleware(['auth', 'verified', 'role:student'])
 
             Route::get('sheets/{sheet}', [StudentResourceSheetController::class, 'show'])->name('show');
             Route::post('sheets/{sheet}/submit', [StudentResourceSheetController::class, 'submit'])->name('submit');
+        });
+
+        // Games — Spelling Meow. Play a round, see My Progress, write reflections.
+        Route::prefix('games/spelling')->name('games.spelling.')->group(function () {
+            Route::get('/', [StudentSpellingController::class, 'play'])->name('play');
+            Route::post('finish', [StudentSpellingController::class, 'finish'])->name('finish');
+            Route::get('progress', [StudentSpellingController::class, 'progress'])->name('progress');
+            Route::get('{attempt}', [StudentSpellingController::class, 'show'])->name('show');
+            Route::patch('{attempt}/reflection', [StudentSpellingController::class, 'reflection'])->name('reflection');
         });
     });
 

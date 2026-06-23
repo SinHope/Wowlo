@@ -69,6 +69,30 @@
                 ],
             ];
 
+            // The "Games" group. Students play + track progress; tutors review
+            // their students' rounds. (Spelling Meow is the first game.)
+            $gamesActive = request()->routeIs('games', '*.games.*');
+            $gamesGroup = [
+                'label'    => 'Games',
+                'icon'     => 'game',
+                'active'   => $gamesActive,
+                'children' => $actsAsTutor ? [
+                    [
+                        'label'  => 'Spelling Meow',
+                        'href'   => route('tutor.games.spelling.index'),
+                        'active' => request()->routeIs('tutor.games.spelling.*'),
+                    ],
+                ] : [
+                    // Each child IS a game; its own pages (Play / My Progress) are
+                    // sub-navigated inside the game, not from the sidebar.
+                    [
+                        'label'  => 'Spelling Meow',
+                        'href'   => route('student.games.spelling.play'),
+                        'active' => request()->routeIs('student.games.spelling.*'),
+                    ],
+                ],
+            ];
+
             $menu = $actsAsTutor ? array_values(array_filter([
                 ['label' => 'Dashboard',         'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 // Super-admin only: manage tutor accounts.
@@ -85,7 +109,7 @@
                 ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => route('tutor.exam-papers.index'), 'active' => request()->routeIs('tutor.exam-papers.*')],
                 ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => route('tutor.quizzes.index'), 'active' => request()->routeIs('tutor.quizzes.*')],
                 $resourcesGroup,
-                ['label' => 'Games',             'icon' => 'game',  'href' => route('games'), 'active' => request()->routeIs('games')],
+                $gamesGroup,
             ])) : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
@@ -94,7 +118,7 @@
                 ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => route('student.exam-papers.index'), 'active' => request()->routeIs('student.exam-papers.*')],
                 ['label' => 'Quizzes',       'icon' => 'quiz',  'href' => route('student.quizzes.index'), 'active' => request()->routeIs('student.quizzes.*')],
                 $resourcesGroup,
-                ['label' => 'Games',         'icon' => 'game',  'href' => route('games'), 'active' => request()->routeIs('games')],
+                $gamesGroup,
                 ['label' => 'Profile',       'icon' => 'user',  'href' => route('profile.edit'), 'active' => request()->routeIs('profile.*')],
             ];
         @endphp
