@@ -148,19 +148,22 @@ it('rejects a whitespace-only reflection but accepts any non-empty text (no mini
     expect($attempt->fresh()->reflection)->toBe('x');
 });
 
-it('shows the blocking reflection gate until a reflection exists', function () {
+it('shows the blocking reflection gate — with the marks visible — until a reflection exists', function () {
     $studentUser = student(['tutor_id' => tutor()->id]);
     $attempt = makeAttempt(['student_id' => $studentUser->id, 'tutor_id' => $studentUser->tutor_id, 'reflection' => null]);
 
+    // Gate is shown, AND the score is visible before reflecting (50% from makeAttempt).
     $this->actingAs($studentUser)
         ->get(route('student.games.spelling.show', $attempt))
-        ->assertSee('One last step');
+        ->assertSee('Round complete!')
+        ->assertSee('50%')
+        ->assertSee('Your words');
 
     $attempt->update(['reflection' => 'Done!']);
 
     $this->actingAs($studentUser)
         ->get(route('student.games.spelling.show', $attempt))
-        ->assertDontSee('One last step');
+        ->assertDontSee('Round complete!');
 });
 
 // ---- Tutor feedback ---------------------------------------------------------

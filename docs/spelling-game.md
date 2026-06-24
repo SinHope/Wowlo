@@ -36,16 +36,22 @@ The flow is a single Alpine.js page (`student/games/spelling/play.blade.php`):
    reflection** (see below), and the tutor's **Feedback** (read-only here — the tutor
    fills it later).
 
-### Mandatory reflection (hard gate)
+### Mandatory reflection (hard gate — marks shown first)
 
-Until the student has written a reflection, a full-screen overlay (`z-[100]`, above the
-sidebar/top-bar) on the results page **blocks the whole app** — the backdrop swallows
-every click and has no dismiss, so they can only type their reflection and **Save &
-continue**. The Save button stays disabled until the textarea is non-empty. There is **no
-minimum length** — a single character is enough; the server trims and rejects only
-blank/whitespace-only input (`SpellingController::reflection`). The gate also appears if an
-old round (opened from My Progress) still has no reflection. (Clicks are fully blocked;
-keyboard focus is not trapped.)
+Until the student has written a reflection, the results page renders in **gate mode**: a
+full-screen, **scrollable** panel (`z-[100]`, covering the sidebar/top-bar) that **shows
+the marks first** — score %, per-word right/wrong review (revealing the correct spellings)
+— and then the **reflection box at the bottom**. This deliberately lets the student see how
+they did *before* reflecting (reflecting on an unseen score made no sense); the panel still
+**blocks the rest of the app** because it covers the whole viewport with no escape. The
+**Save & continue** button is disabled until the textarea is non-empty; there is **no
+minimum length** (a single character is enough — the server trims and rejects only
+blank/whitespace-only input, `SpellingController::reflection`). Saving unlocks **normal
+mode**: the same results plus the editable reflection and the tutor-feedback area. The gate
+also re-appears for any old round (opened from My Progress) that still has no reflection.
+The score card + per-word review are shared by both modes via
+`student/games/spelling/partials/results.blade.php`. (Clicks are fully blocked; keyboard
+focus is not trapped.)
 
 A soft random **background image** is shown behind the play area, pulled from
 `public/images/games/spelling/backgrounds/` (graceful gradient fallback if empty).

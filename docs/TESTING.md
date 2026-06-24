@@ -150,7 +150,7 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] **Timer** (Primary + Mixed only): Infinite vs Set a timer (1/3/5/7/10 / Other minutes); countdown shows; at 15s left the siren banner flashes; at 0 it auto-submits and marks
 - [ ] Per-letter boxes auto-advance/backspace; **Enter** advances; last button reads **Done With Spelling**; "review again?" returns to Q1 with answers kept
 - [ ] Results show score % + per-word right/wrong with the correct spelling
-- [ ] **Reflection gate:** the results page is fully blocked (can't click the sidebar/anything) until a reflection is written; Save is disabled until non-empty; any single character is accepted (no minimum)
+- [ ] **Reflection gate:** on finishing, the marks + per-word review are shown **first** (top), with the reflection box at the bottom; the rest of the app stays blocked until a reflection is written; Save is disabled until non-empty; any single character is accepted (no minimum)
 - [ ] Tutor sees their students' rounds under **Games → Spelling Meow**, opens one, leaves **Feedback**; the student is notified and sees it on their results page
 
 ### PWA & Onboarding
