@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\TutorController as AdminTutorController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PatchNoteController;
+use App\Http\Controllers\Admin\PatchNoteController as AdminPatchNoteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Student\FeeController as StudentFeeController;
@@ -93,6 +96,13 @@ Route::view('/games/roll-the-dice', 'games.roll-the-dice')
     ->middleware(['auth', 'verified'])
     ->name('games.roll-the-dice');
 
+// Patch Notes — public changelog any authenticated user can read. Writing is
+// super_admin-only (see the admin group below).
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/patch-notes', [PatchNoteController::class, 'index'])->name('patch-notes.index');
+    Route::get('/patch-notes/{patchNote}/image', [PatchNoteController::class, 'image'])->name('patch-notes.image');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -112,6 +122,19 @@ Route::middleware(['auth', 'verified', 'role:super_admin'])
     ->name('admin.')
     ->group(function () {
         Route::resource('tutors', AdminTutorController::class)->except(['show']);
+
+        // Banner Notifications — compose an app-wide announcement bar shown at
+        // the top of the app to a chosen audience (everyone / tutors / students).
+        Route::patch('banners/{banner}/toggle', [AdminBannerController::class, 'toggle'])->name('banners.toggle');
+        Route::resource('banners', AdminBannerController::class)->except(['show']);
+
+        // Patch Notes — author the public changelog (everyone reads, only the
+        // super_admin writes). Reading lives in the shared group above.
+        Route::get('patch-notes/create', [AdminPatchNoteController::class, 'create'])->name('patch-notes.create');
+        Route::post('patch-notes', [AdminPatchNoteController::class, 'store'])->name('patch-notes.store');
+        Route::get('patch-notes/{patchNote}/edit', [AdminPatchNoteController::class, 'edit'])->name('patch-notes.edit');
+        Route::put('patch-notes/{patchNote}', [AdminPatchNoteController::class, 'update'])->name('patch-notes.update');
+        Route::delete('patch-notes/{patchNote}', [AdminPatchNoteController::class, 'destroy'])->name('patch-notes.destroy');
     });
 
 // Teaching workspace — tutors AND the super_admin (who teaches their own roster).

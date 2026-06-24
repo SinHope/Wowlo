@@ -138,6 +138,22 @@ return [
         'marked'    => 'Marked',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Banner notification audiences
+    |--------------------------------------------------------------------------
+    | Who an app-wide banner (super_admin only) is shown to. Single source of
+    | truth for the compose radio buttons, the Rule::in validation, and
+    | Banner::visibleTo(). Mirrors the Postgres banners_audience_check
+    | constraint — add a value here and you MUST update that constraint via
+    | migration. Key = stored value, value = display label.
+    */
+    'banner_audiences' => [
+        'everyone' => 'Everyone (tutors + students)',
+        'tutors'   => 'Tutors only',
+        'students' => 'Students only',
+    ],
+
     'subjects' => [
         'English',
         'Mathematics',

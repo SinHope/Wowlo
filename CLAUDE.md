@@ -30,6 +30,8 @@ Wowlo is a tuition-management web app for Singapore tutors (homework, messages, 
 - [`docs/short-answer-quizzes.md`](docs/short-answer-quizzes.md) — build spec for short-answer questions + manual grading (next slice after deploy; decisions locked).
 - [`docs/resources-answer-sheets.md`](docs/resources-answer-sheets.md) — Resources feature (Slice 13): OAS/short-answer sheets a tutor sends or a student builds, then the tutor marks per-question. **Built.**
 - [`docs/spelling-game.md`](docs/spelling-game.md) — Spelling Meow (Slice 14): the first Games-tab game. Student plays (level → fix-the-spelling → letter blanks), writes a mandatory reflection; tutor reviews + leaves feedback. Words live in `config/spelling-words.php`. **Built.**
+- [`docs/banner-notifications.md`](docs/banner-notifications.md) — Banner Notifications (Slice 15): super_admin-only app-wide announcement bar at the top of the app (rich text: bold/italic/underline/strikethrough/colour/link), targeted at everyone/tutors/students, dismissible per-user. HTML is sanitised server-side via `App\Support\HtmlSanitizer`. **Built.**
+- [`docs/patch-notes.md`](docs/patch-notes.md) — Patch Notes (Slice 16): public changelog — everyone reads, only the super_admin writes. Title + free-text version + rich-text body (bold/italic/underline/strikethrough/bullets) + optional R2 image (streamed inline, never public). Shares the `<x-rich-text-editor>` component (active-button highlighting) with banners. **Built.**
 
 ## Stack
 
