@@ -11,7 +11,7 @@
 | Item | Detail |
 |---|---|
 | Framework | **Pest** (wraps PHPUnit) |
-| Total tests | **175** passing (as of Slice 13 — Resources) |
+| Total tests | **189** passing (as of Slice 14 — Spelling Meow) |
 | Database | **In-memory SQLite** — never touches Neon in tests |
 | Run command | `php artisan test` |
 | Parallel | `php artisan test --parallel` (faster, safe) |
@@ -68,7 +68,10 @@ Tutor quiz creation/assignment/results, and the student side: taking an assigned
 Shared moderated library: upload goes to R2 and is **`pending`** until the super_admin approves; approved papers are visible/downloadable to students; pending papers are not; downloads require auth.
 
 ### F2. Resources (answer sheets) — `AnswerSheetTest.php`
-The build → send/submit → mark flow for OAS + short-answer sheets: a tutor builds + sends to one of their own students (and can't send to another tutor's), a student fills + submits a sent sheet (MCQ choice range validated) or builds + submits their own (which resolves to their tutor), and the tutor marks it — **the tutor decides each question's marks and the totals are recomputed server-side** (awarded `lte` the chosen total). Cross-tenant isolation for sheets lives in `MultiTutorTest.php`.
+The build → send/submit → mark flow for OAS + short-answer sheets: a tutor builds + sends to one of their own students (and can't send to another tutor's), a student fills + submits a sent sheet (MCQ choice range validated) or builds + submits their own (which resolves to their tutor), and the tutor marks it — **the tutor decides each question's marks and the totals are recomputed server-side** (awarded `lte` the chosen total). Also covers the tutor **remarks** (sheet-level + per-question) persisting on a short-answer sheet, and that the remarks fields render on the short-answer create page but not MCQ. Cross-tenant isolation for sheets lives in `MultiTutorTest.php`.
+
+### F3. Spelling Meow (Games) — `SpellingGameTest.php`
+The first Games-tab game. Covers **server-side marking** (responses graded against `config/spelling-words.php`; the correct spelling is never sent to the browser during play), case-insensitivity, the virtual **Mixed Primary** level drawing words from across Primary 1–6, the **mandatory reflection** (rejects blank/whitespace-only, accepts any non-empty text — *no minimum*), the **blocking reflection gate** showing until a reflection exists, the tutor **feedback** loop, and student/tutor **tenant isolation** (a student/tutor only touches their own rounds; cross-tenant → 404).
 
 ### G. Push Notifications — `PushNotificationTest.php`
 Uses `Notification::fake()`. New-homework / new-message notifications fire to the right user; a push failure is caught + logged and **never** 500s the request; a user can only manage their own subscription.
@@ -136,8 +139,19 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Student fills + submits a sent sheet → tutor's list shows "To mark"; student sees "Awaiting marking"
 - [ ] Student builds + submits their own sheet → lands with their tutor to mark
 - [ ] Tutor marks: sets each question's marks + awarded, running total/percentage updates live; awarded can't exceed the chosen total
-- [ ] After marking, student sees per-question grade/marks + remarks; both parties get an inbox notice
+- [ ] After marking, student sees per-question grade/marks + feedback; both parties get an inbox notice
+- [ ] **Short Answers Sheet remarks (tutor only):** a **Remarks** field under Subject + a **Remarks** box per question on the *tutor* create page (not MCQ, not the student builder); the student sees them at the top of their sheet and under each question
 - [ ] **Enter key does NOT submit early** — pressing Enter while typing in any sheet builder or the marking page must not save/send (only the Save/Submit button + modal does); Enter inside a textarea still adds a newline
+
+### Games — Spelling Meow
+- [ ] Sidebar **Games → Spelling Meow**; the game's own **Play / My Progress** tabs switch inside it
+- [ ] Loading cat spinner → **Select Your Level** → Primary/Secondary → levels; Secondary 3–5 show "Building in progress.."
+- [ ] **Mixed Primary (Primary 1 - 6)** plays a 30-word round from across P1–P6
+- [ ] **Timer** (Primary + Mixed only): Infinite vs Set a timer (1/3/5/7/10 / Other minutes); countdown shows; at 15s left the siren banner flashes; at 0 it auto-submits and marks
+- [ ] Per-letter boxes auto-advance/backspace; **Enter** advances; last button reads **Done With Spelling**; "review again?" returns to Q1 with answers kept
+- [ ] Results show score % + per-word right/wrong with the correct spelling
+- [ ] **Reflection gate:** the results page is fully blocked (can't click the sidebar/anything) until a reflection is written; Save is disabled until non-empty; any single character is accepted (no minimum)
+- [ ] Tutor sees their students' rounds under **Games → Spelling Meow**, opens one, leaves **Feedback**; the student is notified and sees it on their results page
 
 ### PWA & Onboarding
 - [ ] **"Install app"** button shows on the landing + login pages (only when `PWA_PROMOTE_INSTALL=true`); native prompt on Android/desktop Chrome, "Add to Home Screen" steps on iOS

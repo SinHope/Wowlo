@@ -32,9 +32,20 @@ The flow is a single Alpine.js page (`student/games/spelling/play.blade.php`):
    your answers again?"* **Yes** → back to question 1 with their typed answers preserved
    (same layout, editable). **No** → submit.
 5. **Results** (`student/games/spelling/show.blade.php`) — score + **percentage**, a
-   per-word correct/wrong review (now revealing the correct spelling), a **required**
-   "My Reflection / Learning Points" textarea (the student MUST fill this), and the
-   tutor's **Feedback** (read-only here — the tutor fills it later).
+   per-word correct/wrong review (now revealing the correct spelling), the **mandatory
+   reflection** (see below), and the tutor's **Feedback** (read-only here — the tutor
+   fills it later).
+
+### Mandatory reflection (hard gate)
+
+Until the student has written a reflection, a full-screen overlay (`z-[100]`, above the
+sidebar/top-bar) on the results page **blocks the whole app** — the backdrop swallows
+every click and has no dismiss, so they can only type their reflection and **Save &
+continue**. The Save button stays disabled until the textarea is non-empty. There is **no
+minimum length** — a single character is enough; the server trims and rejects only
+blank/whitespace-only input (`SpellingController::reflection`). The gate also appears if an
+old round (opened from My Progress) still has no reflection. (Clicks are fully blocked;
+keyboard focus is not trapped.)
 
 A soft random **background image** is shown behind the play area, pulled from
 `public/images/games/spelling/backgrounds/` (graceful gradient fallback if empty).

@@ -15,6 +15,8 @@ Two sheet **types** (canonical list: `config('wowlo.answer_sheet_types')`):
 
 Each sheet has a **Title** + **Subject** (from `config('wowlo.subjects')`), a `+ Add question` control (plus a bulk "Add N rows" for long papers), and grows vertically. There is **no stored correct answer** — an OAS just records answers against a paper whose key the tutor holds, so **marking is always manual**.
 
+**Remarks (tutor instructions).** On the **Short Answers Sheet** builder *only* (tutor side), the tutor can add an optional sheet-level **Remarks** (special instructions for the whole sheet) and an optional per-question **Remarks**. These are shown to the student at the top of their sheet / under each question while they fill it in (and stay visible after marking). They are distinct from the marking `feedback`/`tutor_feedback`, which the tutor writes *after* the student submits. MCQ sheets and the student-built builder don't expose remarks.
+
 ## 2. Roles & flow
 
 Both tutors/super_admins **and** students can author a sheet:
@@ -42,8 +44,10 @@ Self-contained in Resources (not folded into Homework — homework marking is bi
 
 Because **one sheet belongs to exactly one student**, the sheet row *is* the assignment + the submission — no separate attempt/assignment tables (unlike quizzes). Two tables (see DATABASE.md §4):
 
-- `answer_sheets` — `author_id`, `tutor_id` (owning tutor, set server-side), `student_id`, `type`, `title`, `subject`, `status`, `total_marks`, `obtained_marks`, `feedback`, `submitted_at`, `marked_at`.
-- `answer_sheet_questions` — `order`, `num_options` (MCQ; fixed at 4 today, column kept for future flexibility), `marks`, the student's answer (`choice` / `answer_text`), and the tutor's marking (`grade`, `marks_awarded`, `tutor_feedback`).
+- `answer_sheets` — `author_id`, `tutor_id` (owning tutor, set server-side), `student_id`, `type`, `title`, `subject`, `remarks` (tutor's sheet-level instructions, nullable), `status`, `total_marks`, `obtained_marks`, `feedback`, `submitted_at`, `marked_at`.
+- `answer_sheet_questions` — `order`, `num_options` (MCQ; fixed at 4 today, column kept for future flexibility), `marks`, `remarks` (tutor's per-question instructions, nullable), the student's answer (`choice` / `answer_text`), and the tutor's marking (`grade`, `marks_awarded`, `tutor_feedback`).
+
+> `remarks` (both tables) were added additively (nullable) in `2026_06_24_000000_add_remarks_to_answer_sheets` — instructions set at *build* time, separate from the marking `feedback`.
 
 ## 5. Tenancy & security
 
