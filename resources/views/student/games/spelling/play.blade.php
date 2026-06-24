@@ -257,7 +257,8 @@
                 // server data
                 wordsByLevel:  @js($wordsByLevel),
                 backgrounds:   @js($backgrounds),
-                perRound:      @js($perRound),
+                perRound:        @js($perRound),
+                perRoundByLevel: @js($perRoundByLevel),
                 mixedLevel:    @js($mixedLevel),
                 mixedPerRound: @js($mixedPerRound),
 
@@ -323,7 +324,8 @@
                 },
 
                 questionCount(label) {
-                    return label === this.mixedLevel ? this.mixedPerRound : this.perRound;
+                    if (label === this.mixedLevel) return this.mixedPerRound;
+                    return this.perRoundByLevel[label] ?? this.perRound;
                 },
 
                 startLevel(label, minutes) {

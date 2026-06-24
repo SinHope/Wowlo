@@ -13,7 +13,8 @@ The flow is a single Alpine.js page (`student/games/spelling/play.blade.php`):
 2. **Select Your Level** — **Primary School** / **Secondary School**, then the specific levels:
    - Primary 1–6 and Secondary 1–2 are **playable**.
    - **Mixed Primary (Primary 1 - 6)** sits at the end of the Primary group — a **30-word**
-     round drawn at random from across all of Primary 1–6 (a normal round is 10 words). It's
+     round drawn at random from across all of Primary 1–6 (a normal round is 10 words, but
+     **Primary 6 is 20** via `questions_per_level`). It's
      a *virtual* level (not in `config/spelling-words.php`); the controller merges the Primary
      words for it (`SpellingController::MIXED_PRIMARY` / `wordsForLevel()`).
    - **Secondary 3, 4, 5 are disabled** — struck-through with "Building in progress.."
@@ -101,9 +102,12 @@ Postgres. R2 is only for file blobs (it would be the wrong tool here). One table
 Single source of truth (same convention as `config/wowlo.php`). Keyed by level label;
 each word is `['answer' => 'because', 'shown' => 'becuase']` — `shown` is the misspelled
 prompt, `answer` is the correct spelling and its length drives the number of blanks.
-`questions_per_round` caps how many words a round picks (at random). **Replace the seeded
-sample words with your real Singapore-curriculum lists** — add/remove levels here and the
-UI follows automatically (an empty level becomes "Building in progress..").
+`questions_per_round` caps how many words a round picks (at random; default **10**), and
+`questions_per_level` overrides it per level — e.g. `'Primary 6' => 20` (Mixed Primary is
+**30**, set in the controller). **Replace the seeded sample words with your real
+Singapore-curriculum lists** — add/remove levels here and the UI follows automatically (an
+empty level becomes "Building in progress.."). The lists + per-level counts are emitted by
+`scripts/gen-spelling-words.php`.
 
 ## Security / correctness
 

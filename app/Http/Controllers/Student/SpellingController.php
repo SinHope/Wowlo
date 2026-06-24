@@ -58,6 +58,7 @@ class SpellingController extends Controller
             'levels'        => $levels->values(),
             'wordsByLevel'  => $wordsByLevel,
             'perRound'      => (int) config('spelling-words.questions_per_round', 10),
+            'perRoundByLevel' => config('spelling-words.questions_per_level', []),
             'mixedLevel'    => self::MIXED_PRIMARY,
             'mixedPerRound' => self::MIXED_PER_ROUND,
             'catImage'      => asset('images/games/spelling/3d-smart-cat.png'),
