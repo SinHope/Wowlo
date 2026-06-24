@@ -289,6 +289,7 @@
                 sirenOn: false,
                 _timer: null,
                 _submitting: false,
+                _audioCtx: null,
 
                 boot() {
                     let n = 0;
@@ -381,7 +382,34 @@
                 },
 
                 onInput(e) {
-                    if (e.target.value && e.target.nextElementSibling) e.target.nextElementSibling.focus();
+                    if (e.target.value) {
+                        this.playKeySound();
+                        if (e.target.nextElementSibling) e.target.nextElementSibling.focus();
+                    }
+                },
+
+                // Short synthesized "blip" on each letter typed — no audio file needed.
+                playKeySound() {
+                    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                    try {
+                        const Ctx = window.AudioContext || window.webkitAudioContext;
+                        if (!Ctx) return;
+                        this._audioCtx = this._audioCtx || new Ctx();
+                        const ctx = this._audioCtx;
+                        if (ctx.state === 'suspended') ctx.resume();
+                        const now = ctx.currentTime;
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(660, now);
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.05);
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+                        osc.connect(gain).connect(ctx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.13);
+                    } catch (_) { /* audio unsupported — fail silently */ }
                 },
 
                 onKey(e, j) {
