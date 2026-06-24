@@ -88,6 +88,11 @@ Route::view('/games', 'games')
     ->middleware(['auth', 'verified'])
     ->name('games');
 
+// Roll the Dice — purely a fun dice roll (no scoring, no data). Shared by all roles.
+Route::view('/games/roll-the-dice', 'games.roll-the-dice')
+    ->middleware(['auth', 'verified'])
+    ->name('games.roll-the-dice');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

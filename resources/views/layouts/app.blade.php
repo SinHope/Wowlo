@@ -82,6 +82,11 @@
                         'href'   => route('tutor.games.spelling.index'),
                         'active' => request()->routeIs('tutor.games.spelling.*'),
                     ],
+                    [
+                        'label'  => 'Roll the Dice',
+                        'href'   => route('games.roll-the-dice'),
+                        'active' => request()->routeIs('games.roll-the-dice'),
+                    ],
                 ] : [
                     // Each child IS a game; its own pages (Play / My Progress) are
                     // sub-navigated inside the game, not from the sidebar.
@@ -89,6 +94,11 @@
                         'label'  => 'Spelling Meow',
                         'href'   => route('student.games.spelling.play'),
                         'active' => request()->routeIs('student.games.spelling.*'),
+                    ],
+                    [
+                        'label'  => 'Roll the Dice',
+                        'href'   => route('games.roll-the-dice'),
+                        'active' => request()->routeIs('games.roll-the-dice'),
                     ],
                 ],
             ];
