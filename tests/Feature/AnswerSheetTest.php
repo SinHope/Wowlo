@@ -42,6 +42,45 @@ it('lets a tutor build an OAS sheet, send it to a student, and notify them', fun
     ]);
 });
 
+it('saves the tutor sheet-level and per-question remarks on a short-answer sheet', function () {
+    Notification::fake();
+    $tutor = tutor();
+    $studentMine = student(['tutor_id' => $tutor->id]);
+
+    $this->actingAs($tutor)
+        ->post(route('tutor.resources.store', 'short_answer'), [
+            'title'      => 'P4 English — Comprehension',
+            'subject'    => 'English',
+            'student_id' => $studentMine->id,
+            'remarks'    => 'Answer in full sentences.',
+            'questions'  => [
+                ['marks' => 2, 'remarks' => 'Use evidence from the passage.'],
+                ['marks' => 1],
+            ],
+        ])
+        ->assertRedirect(route('tutor.resources.index', 'short_answer'));
+
+    $sheet = AnswerSheet::firstWhere('title', 'P4 English — Comprehension');
+    expect($sheet->remarks)->toBe('Answer in full sentences.')
+        ->and($sheet->questions()->orderBy('order')->first()->remarks)->toBe('Use evidence from the passage.')
+        ->and($sheet->questions()->orderBy('order')->skip(1)->first()->remarks)->toBeNull();
+});
+
+it('shows the remarks fields on the short-answer create page but not the mcq one', function () {
+    $tutor = tutor();
+
+    $this->actingAs($tutor)
+        ->get(route('tutor.resources.create', 'short_answer'))
+        ->assertOk()
+        ->assertSee('name="remarks"', false)        // sheet-level
+        ->assertSee('[remarks]', false);            // per-question (Alpine :name)
+
+    $this->actingAs($tutor)
+        ->get(route('tutor.resources.create', 'mcq'))
+        ->assertOk()
+        ->assertDontSee('name="remarks"', false);
+});
+
 it('rejects a tutor sending a sheet to a non-owned student', function () {
     $tutorA = tutor();
     $studentB = student(['tutor_id' => tutor()->id]);

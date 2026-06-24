@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AnswerSheetQuestion extends Model
 {
     protected $fillable = [
-        'answer_sheet_id', 'order', 'num_options', 'marks',
+        'answer_sheet_id', 'order', 'num_options', 'marks', 'remarks',
         'choice', 'answer_text', 'grade', 'marks_awarded', 'tutor_feedback',
     ];
 

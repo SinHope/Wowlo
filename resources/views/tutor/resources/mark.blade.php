@@ -28,6 +28,13 @@
             <p class="mt-1 text-sm font-bold text-muted"><span x-text="pct"></span>% · running total</p>
         </div>
 
+        @if (filled($sheet->remarks))
+            <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-primary">Your remarks to the student</p>
+                <p class="mt-1 whitespace-pre-line text-sm text-ink">{{ $sheet->remarks }}</p>
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('tutor.resources.mark.save', $sheet) }}" class="space-y-4"
               @keydown.enter="if ($event.target.tagName === 'INPUT') $event.preventDefault()">
             @csrf
@@ -40,6 +47,10 @@
                             <span x-text="qmarks['{{ $q->id }}']"></span> marks
                         </span>
                     </div>
+
+                    @if (filled($q->remarks))
+                        <p class="mt-2 rounded-lg bg-accent/10 px-3 py-2 text-xs text-ink"><span class="font-bold text-accent-dark">Remarks:</span> {{ $q->remarks }}</p>
+                    @endif
 
                     {{-- The student's answer --}}
                     @if ($sheet->isMcq())

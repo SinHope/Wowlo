@@ -20,6 +20,13 @@
             </div>
         </div>
 
+        @if (filled($sheet->remarks))
+            <div class="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wide text-primary">Remarks from your tutor</p>
+                <p class="mt-1 whitespace-pre-line text-sm text-ink">{{ $sheet->remarks }}</p>
+            </div>
+        @endif
+
         @if ($sheet->isSent())
             {{-- FILL MODE --}}
             <div class="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-ink">
@@ -41,6 +48,10 @@
                             <span class="font-bold text-ink">Question {{ $i + 1 }}</span>
                             <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-muted">{{ $q->marks }} {{ Str::plural('mark', $q->marks) }}</span>
                         </div>
+
+                        @if (filled($q->remarks))
+                            <p class="mt-2 rounded-lg bg-accent/10 px-3 py-2 text-xs text-ink"><span class="font-bold text-accent-dark">Remarks:</span> {{ $q->remarks }}</p>
+                        @endif
 
                         @if ($sheet->isMcq())
                             <div class="mt-4 flex flex-wrap gap-3">
@@ -102,6 +113,10 @@
                             <span class="text-sm font-bold text-ink">Question {{ $i + 1 }}</span>
                             <span class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-muted">{{ $q->marks }} {{ Str::plural('mark', $q->marks) }}</span>
                         </div>
+
+                        @if (filled($q->remarks))
+                            <p class="mt-2 rounded-lg bg-accent/10 px-3 py-2 text-xs text-ink"><span class="font-bold text-accent-dark">Remarks:</span> {{ $q->remarks }}</p>
+                        @endif
 
                         @if ($sheet->isMcq())
                             <div class="mt-3 flex flex-wrap gap-2">

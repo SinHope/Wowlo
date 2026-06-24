@@ -58,6 +58,17 @@
                     </select>
                     @error('subject') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
                 </div>
+
+                @if ($type === 'short_answer')
+                    <div>
+                        <label class="block text-sm font-semibold text-ink" for="remarks">Remarks <span class="font-normal text-muted">(optional)</span></label>
+                        <p class="text-xs text-muted">Special instructions for the student — shown at the top of their sheet.</p>
+                        <textarea id="remarks" name="remarks" rows="2"
+                                  placeholder="e.g. Answer in full sentences. Show your working where needed."
+                                  class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary @error('remarks') border-danger @enderror">{{ old('remarks') }}</textarea>
+                        @error('remarks') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
+                    </div>
+                @endif
             </div>
 
             {{-- Questions --}}
@@ -111,6 +122,15 @@
                                 <input type="number" :name="`questions[${qi}][marks]`" x-model.number="q.marks" min="1" max="100" required
                                        class="w-20 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
                             </div>
+
+                            @if ($type === 'short_answer')
+                                <div class="mt-3">
+                                    <label class="block text-xs font-bold uppercase tracking-wide text-muted">Remarks <span class="font-normal normal-case">(optional)</span></label>
+                                    <textarea :name="`questions[${qi}][remarks]`" x-model="q.remarks" rows="2"
+                                              placeholder="Special instructions for this question…"
+                                              class="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                                </div>
+                            @endif
                         </div>
                     </template>
                 </div>
@@ -178,11 +198,11 @@
     <script>
         function sheetBuilder() {
             let uid = 0;
-            const blank = () => ({ uid: uid++, marks: 1 });
+            const blank = () => ({ uid: uid++, marks: 1, remarks: '' });
             const oldQuestions = @json(old('questions', []));
 
             let questions = oldQuestions.length
-                ? oldQuestions.map(q => ({ uid: uid++, marks: q.marks ? parseInt(q.marks) : 1 }))
+                ? oldQuestions.map(q => ({ uid: uid++, marks: q.marks ? parseInt(q.marks) : 1, remarks: q.remarks || '' }))
                 : [blank()];
 
             return {

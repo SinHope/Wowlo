@@ -56,12 +56,15 @@ class ResourceSheetController extends Controller
     public function store(Request $request, string $type): RedirectResponse
     {
         $validated = $request->validate([
-            'title'             => ['required', 'string', 'max:255'],
-            'subject'           => ['required', Rule::in(config('wowlo.subjects'))],
+            'title'               => ['required', 'string', 'max:255'],
+            'subject'             => ['required', Rule::in(config('wowlo.subjects'))],
             // Tenancy: may only send to one of THIS tutor's own students.
-            'student_id'        => ['required', Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', 'student')->where('tutor_id', auth()->id()))],
-            'questions'         => ['required', 'array', 'min:1', 'max:' . self::MAX_QUESTIONS],
-            'questions.*.marks' => ['required', 'integer', 'min:1', 'max:100'],
+            'student_id'          => ['required', Rule::exists('users', 'id')->where(fn ($q) => $q->where('role', 'student')->where('tutor_id', auth()->id()))],
+            // Optional tutor instructions (whole sheet + per question).
+            'remarks'             => ['nullable', 'string', 'max:2000'],
+            'questions'           => ['required', 'array', 'min:1', 'max:' . self::MAX_QUESTIONS],
+            'questions.*.marks'   => ['required', 'integer', 'min:1', 'max:100'],
+            'questions.*.remarks' => ['nullable', 'string', 'max:2000'],
         ], [
             'student_id.required' => 'Choose a student to send this to.',
             'questions.required'  => 'Add at least one question.',
@@ -76,6 +79,7 @@ class ResourceSheetController extends Controller
                 'type'        => $type,
                 'title'       => $validated['title'],
                 'subject'     => $validated['subject'],
+                'remarks'     => $validated['remarks'] ?? null,
                 'status'      => 'sent',
                 // Server-computed snapshot — never trust a client total.
                 'total_marks' => collect($validated['questions'])->sum('marks'),
@@ -86,6 +90,7 @@ class ResourceSheetController extends Controller
                     'order'       => $i,
                     'num_options' => self::MCQ_OPTIONS,
                     'marks'       => $q['marks'],
+                    'remarks'     => $q['remarks'] ?? null,
                 ]);
             }
 

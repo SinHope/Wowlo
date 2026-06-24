@@ -10,7 +10,7 @@ class AnswerSheet extends Model
 {
     protected $fillable = [
         'author_id', 'tutor_id', 'student_id', 'type', 'title', 'subject',
-        'status', 'total_marks', 'obtained_marks', 'feedback',
+        'remarks', 'status', 'total_marks', 'obtained_marks', 'feedback',
         'submitted_at', 'marked_at',
     ];
 
