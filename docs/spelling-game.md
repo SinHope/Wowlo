@@ -27,8 +27,10 @@ The flow is a single Alpine.js page (`student/games/spelling/play.blade.php`):
    purely client-side UX — the server still marks authoritatively.
 4. **Play** — for each question a **wrongly-spelled** word is shown on top; below it are
    per-letter blank boxes (one `_` per letter of the *correct* word). The student types
-   the correct spelling. **Enter** or the **Spelt** button advances. The final question's
-   button reads **Done With Spelling**.
+   the correct spelling; **each letter typed plays a short synthesised "blip"** (a Web
+   Audio `triangle` tone — no audio file, generated in `onInput`/`playKeySound`; silenced
+   under `prefers-reduced-motion` and where Web Audio is unavailable). **Enter** or the
+   **Spelt** button advances. The final question's button reads **Done With Spelling**.
 4. **Review prompt** — after the last question a modal asks *"Do you want to look through
    your answers again?"* **Yes** → back to question 1 with their typed answers preserved
    (same layout, editable). **No** → submit.

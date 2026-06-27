@@ -85,6 +85,11 @@
                         'active' => request()->routeIs('tutor.games.spelling.*'),
                     ],
                     [
+                        'label'  => 'Multiplication Rabbit',
+                        'href'   => route('tutor.games.multiplication.index'),
+                        'active' => request()->routeIs('tutor.games.multiplication.*'),
+                    ],
+                    [
                         'label'  => 'Roll the Dice',
                         'href'   => route('games.roll-the-dice'),
                         'active' => request()->routeIs('games.roll-the-dice'),
@@ -96,6 +101,11 @@
                         'label'  => 'Spelling Meow',
                         'href'   => route('student.games.spelling.play'),
                         'active' => request()->routeIs('student.games.spelling.*'),
+                    ],
+                    [
+                        'label'  => 'Multiplication Rabbit',
+                        'href'   => route('student.games.multiplication.play'),
+                        'active' => request()->routeIs('student.games.multiplication.*'),
                     ],
                     [
                         'label'  => 'Roll the Dice',
