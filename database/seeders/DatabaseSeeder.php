@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\HangmanWheel;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -57,6 +58,21 @@ class DatabaseSeeder extends Seeder
                 'role' => 'student',
                 'tutor_id' => $friendTutor->id,
                 'phone_1' => '90000001',
+            ]
+        );
+
+        // The global "standard" Hangman wheel — authored by the super_admin and
+        // playable by everyone. Tutors add their own custom wheels in-app.
+        HangmanWheel::updateOrCreate(
+            ['type' => 'standard', 'name' => 'Wowlo Standard Wheel'],
+            [
+                'created_by' => $superAdmin->id,
+                'tutor_id'   => null,
+                'slices'     => [
+                    '+1 Free Guess', 'Reveal a Letter', 'Spin Again', '+2 Free Guesses',
+                    'Lose a Guess', 'Good Luck!', 'Free Vowel', 'No Help',
+                    'Mystery Letter', 'Try Again',
+                ],
             ]
         );
     }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\TutorController as AdminTutorController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HangmanController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PatchNoteController;
 use App\Http\Controllers\Admin\PatchNoteController as AdminPatchNoteController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Student\MultiplicationController as StudentMultiplicati
 use App\Http\Controllers\Tutor\BillController as TutorBillController;
 use App\Http\Controllers\Tutor\ExamPaperController as TutorExamPaperController;
 use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
+use App\Http\Controllers\Tutor\HangmanWheelController as TutorHangmanWheelController;
 use App\Http\Controllers\Tutor\HomeworkController as TutorHomeworkController;
 use App\Http\Controllers\Tutor\MessageController as TutorMessageController;
 use App\Http\Controllers\Tutor\QuizController as TutorQuizController;
@@ -97,6 +99,19 @@ Route::view('/games', 'games')
 Route::view('/games/roll-the-dice', 'games.roll-the-dice')
     ->middleware(['auth', 'verified'])
     ->name('games.roll-the-dice');
+
+// Hangman Wheel Panda — gameplay shared by all roles. Server-authoritative: the
+// secret word lives in the session, never reaches the browser until the round
+// ends. Wheel management (tenant-scoped) is in the tutor group below.
+Route::middleware(['auth', 'verified'])
+    ->prefix('games/hangman')
+    ->name('games.hangman.')
+    ->group(function () {
+        Route::get('/', [HangmanController::class, 'play'])->name('play');
+        Route::post('start', [HangmanController::class, 'start'])->name('start');
+        Route::post('guess', [HangmanController::class, 'guess'])->name('guess');
+        Route::post('effect', [HangmanController::class, 'effect'])->name('effect');
+    });
 
 // Patch Notes — public changelog any authenticated user can read. Writing is
 // super_admin-only (see the admin group below).
@@ -224,6 +239,17 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
             Route::get('/', [TutorMultiplicationController::class, 'index'])->name('index');
             Route::get('{attempt}', [TutorMultiplicationController::class, 'show'])->name('show');
             Route::post('{attempt}/feedback', [TutorMultiplicationController::class, 'feedback'])->name('feedback');
+        });
+
+        // Games — Hangman Wheel Panda. Tutors author their own custom wheels; the
+        // super_admin can also author the global "standard" wheels. Tenant-scoped.
+        Route::prefix('games/hangman/wheels')->name('games.hangman.wheels.')->group(function () {
+            Route::get('/', [TutorHangmanWheelController::class, 'index'])->name('index');
+            Route::get('create', [TutorHangmanWheelController::class, 'create'])->name('create');
+            Route::post('/', [TutorHangmanWheelController::class, 'store'])->name('store');
+            Route::get('{wheel}/edit', [TutorHangmanWheelController::class, 'edit'])->name('edit');
+            Route::put('{wheel}', [TutorHangmanWheelController::class, 'update'])->name('update');
+            Route::delete('{wheel}', [TutorHangmanWheelController::class, 'destroy'])->name('destroy');
         });
     });
 

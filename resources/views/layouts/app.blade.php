@@ -73,7 +73,7 @@
 
             // The "Games" group. Students play + track progress; tutors review
             // their students' rounds. (Spelling Meow is the first game.)
-            $gamesActive = request()->routeIs('games', '*.games.*');
+            $gamesActive = request()->routeIs('games', 'games.*', '*.games.*');
             $gamesGroup = [
                 'label'    => 'Games',
                 'icon'     => 'game',
@@ -88,6 +88,11 @@
                         'label'  => 'Multiplication Rabbit',
                         'href'   => route('tutor.games.multiplication.index'),
                         'active' => request()->routeIs('tutor.games.multiplication.*'),
+                    ],
+                    [
+                        'label'  => 'Hangman Wheel Panda',
+                        'href'   => route('tutor.games.hangman.wheels.index'),
+                        'active' => request()->routeIs('tutor.games.hangman.*', 'games.hangman.*'),
                     ],
                     [
                         'label'  => 'Roll the Dice',
@@ -106,6 +111,11 @@
                         'label'  => 'Multiplication Rabbit',
                         'href'   => route('student.games.multiplication.play'),
                         'active' => request()->routeIs('student.games.multiplication.*'),
+                    ],
+                    [
+                        'label'  => 'Hangman Wheel Panda',
+                        'href'   => route('games.hangman.play'),
+                        'active' => request()->routeIs('games.hangman.*'),
                     ],
                     [
                         'label'  => 'Roll the Dice',
