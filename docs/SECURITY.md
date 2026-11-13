@@ -201,6 +201,9 @@ Wowlo collects personal data of minors and their parents. This falls under Singa
 - Bill totals are **always recomputed server-side** — the server never trusts a grand total submitted by the client
 - `outstanding_balance` is derived from the ledger (`Σ bills − Σ payments`), never a client-submitted value
 - `tutor_id` on bills is set from `auth()->id()` — a tutor cannot generate a bill attributed to another tutor
+- **Edit / update / delete are ownership-checked** like `show`: another tutor's bill → **404** (not 403). Covered in `MultiTutorTest`.
+- **Edit can't re-target a bill:** the student and the `outstanding_before` snapshot are kept; any `student_id` the client sends on update is ignored, and lines/charges/totals are recomputed server-side.
+- **Lesson dates later than today are rejected server-side** (`before_or_equal:today`, Singapore date) on create *and* edit. The "Date not allowed" pop-up is only a convenience — the server rule is the real guard.
 
 ---
 

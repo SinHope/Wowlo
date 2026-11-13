@@ -29,11 +29,14 @@ class BillRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id' => ['required', Rule::exists('users', 'id')->where('role', 'student')],
+            // Locked on edit: the bill keeps its original student, so any value is ignored.
+            'student_id' => $this->route('bill')
+                ? ['nullable']
+                : ['required', Rule::exists('users', 'id')->where('role', 'student')],
             'billing_month' => ['required', 'date_format:Y-m'],
 
             'lessons' => ['required', 'array', 'min:1'],
-            'lessons.*.lesson_date' => ['required', 'date'],
+            'lessons.*.lesson_date' => ['required', 'date', 'before_or_equal:today'],
             'lessons.*.hours' => ['required', 'numeric', 'min:0.25', 'max:24'],
 
             'charges' => ['nullable', 'array'],
@@ -59,6 +62,7 @@ class BillRequest extends FormRequest
         return [
             'lessons.required' => 'Add at least one lesson line.',
             'lessons.min' => 'Add at least one lesson line.',
+            'lessons.*.lesson_date.before_or_equal' => 'A lesson date cannot be later than today.',
         ];
     }
 }

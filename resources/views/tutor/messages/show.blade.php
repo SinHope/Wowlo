@@ -35,5 +35,16 @@
 
             <div class="whitespace-pre-line text-sm leading-relaxed text-ink">{{ $message->body }}</div>
         </div>
+
+        {{-- Reply only to one of this tutor's own students (not admin notices). --}}
+        @if ($received && $message->sender->isStudent() && $message->sender->tutor_id === auth()->id())
+            <div class="flex justify-end">
+                <a href="{{ route('tutor.messages.create', ['reply_to' => $message->id]) }}"
+                   class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                    Reply
+                </a>
+            </div>
+        @endif
     </div>
 </x-app-layout>

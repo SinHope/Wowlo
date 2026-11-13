@@ -22,15 +22,18 @@ export default {
                     dark: '#6D28D9',    // for violet text on light backgrounds (4.5:1+)
                     light: '#A78BFA',
                 },
-                cream: '#FFFBF5',       // warm off-white page background
+                cream: 'rgb(var(--c-cream) / <alpha-value>)', // page background (#FFFBF5 light), themed via CSS vars in app.css
                 accent: {
                     DEFAULT: '#F59E0B', // amber — achievement, badges, highlights
                     dark: '#D97706',    // amber text
                 },
+                // Views use bare `bg-amber` / `bg-amber/10` (badges, hint boxes); Tailwind's amber
+                // has no DEFAULT shade, so those rendered nothing. Merges with amber-50..950.
+                amber: { DEFAULT: '#F59E0B' },
                 success: '#16A34A',     // homework done / payment confirmed
                 danger: '#DC2626',      // error states only
-                ink: '#2A2235',         // warm charcoal — body + headings
-                muted: '#6B5E73',       // captions (still 4.5:1 on cream)
+                ink: 'rgb(var(--c-ink) / <alpha-value>)',     // body + headings (#2A2235 light)
+                muted: 'rgb(var(--c-muted) / <alpha-value>)', // captions (#6B5E73 light, 4.5:1 on cream)
             },
         },
     },

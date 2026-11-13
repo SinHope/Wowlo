@@ -23,24 +23,32 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
                         <option value="">Select a student…</option>
                         @foreach ($students as $student)
-                            <option value="{{ $student->id }}" @selected(old('receiver_id') == $student->id)>{{ $student->name }}</option>
+                            <option value="{{ $student->id }}" @selected(old('receiver_id', $replyTo?->sender_id) == $student->id)>{{ $student->name }}</option>
                         @endforeach
                     </select>
                     <x-input-error :messages="$errors->get('receiver_id')" class="mt-2" />
                 </div>
 
+                @if ($replyTo)
+                    <div class="rounded-xl border border-gray-100 bg-cream p-3">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-muted">Replying to</p>
+                        <p class="mt-0.5 font-semibold text-ink">{{ $replyTo->subject }}</p>
+                        <p class="mt-1 line-clamp-3 whitespace-pre-line text-sm text-muted">{{ $replyTo->body }}</p>
+                    </div>
+                @endif
+
                 <!-- Subject -->
                 <div>
                     <x-input-label for="subject" value="Subject" />
                     <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full"
-                                  :value="old('subject')" required autofocus />
+                                  :value="old('subject', $replyTo?->replySubject())" required :autofocus="! $replyTo" />
                     <x-input-error :messages="$errors->get('subject')" class="mt-2" />
                 </div>
 
                 <!-- Body -->
                 <div>
                     <x-input-label for="body" value="Message" />
-                    <textarea id="body" name="body" rows="7" required
+                    <textarea id="body" name="body" rows="7" required @if ($replyTo) autofocus @endif
                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary">{{ old('body') }}</textarea>
                     <x-input-error :messages="$errors->get('body')" class="mt-2" />
                 </div>

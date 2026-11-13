@@ -34,7 +34,7 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 - A **student** row has `tutor_id` = the owning tutor's id. **One tutor per student account** — a real-world student with two tutors on Wowlo uses two accounts (different emails), one per tutor. A "shared student" (one account, many tutors) is a parked future slice that would replace this column with a pivot via expand-contract: see [shared-students.md](shared-students.md).
 - A **tutor / super_admin** row has `tutor_id = NULL`.
 - Everything a student owns (homework, fees, payments, bills, quiz attempts, messages) is reachable from the student, so it inherits the student's tutor.
-- Some tables also carry `tutor_id` directly for fast scoping: `homeworks`, `bills`, `quizzes`, `exam_papers`, `answer_sheets`.
+- Some tables also carry `tutor_id` directly for fast scoping: `homeworks`, `bills`, `quizzes`, `exam_papers`, `answer_sheets`, `attendances`.
 
 **Rules when adding any tenant-owned table or feature:**
 
@@ -55,7 +55,7 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 | `messages` | `sender_id` (tutor) / `receiver_id` (student) | `is_read` flag drives the inbox badge. |
 | `tuition_fees` | `student_id` (unique — one per student) | hourly rate snapshot. |
 | `payments` | `student_id` | method has a CHECK. |
-| `bills` + `bill_lines` + `bill_charges` | `student_id` + `tutor_id` | totals are **snapshots** taken at generation. |
+| `bills` + `bill_lines` + `bill_charges` | `student_id` + `tutor_id` | totals are **snapshots** taken at generation (re-snapshotted if the bill is edited; `outstanding_before` is kept). Deleting a bill cascades its lines/charges. |
 | `exam_papers` | `tutor_id` (uploader) | **shared library**; `status` `pending`/`approved` (CHECK), `approved_by`, `approved_at`. |
 | `quizzes` + `quiz_questions` | `tutor_id` | `exam_type` has a CHECK; questions have `question_type` (currently `mcq`). |
 | `quiz_assignments` | `student_id` | unique `(quiz_id, student_id)`. |
@@ -63,6 +63,7 @@ Why: while a deploy is rolling, the *old* code may still be running against the 
 | `quiz_answers` | via `attempt_id` | `is_correct`, `marks_awarded`. |
 | `answer_sheets` | `tutor_id` + `student_id` | **Resources** (OAS / short-answer sheets). One student per sheet, so the row IS the assignment + submission (no separate attempt/assignment tables). `author_id` = who built it (tutor or student); `type` `mcq`/`short_answer` + `status` `sent`/`submitted`/`marked` (both CHECK). `total_marks`/`obtained_marks` recomputed server-side at marking. |
 | `answer_sheet_questions` | via `answer_sheet_id` | One numbered row per question. Holds structure (`order`, `num_options`, `marks`), the student's answer (`choice` 1–N or `answer_text`), and the tutor's marking (`grade` CHECK, `marks_awarded`, `tutor_feedback`). |
+| `attendances` | `tutor_id` + `student_id` | **Attendance Tracking** ([attendance-tracking.md](attendance-tracking.md)). **A row exists ⇔ the student attended that day** (unticking deletes it). Unique `(student_id, lesson_date)`. `bill_id` (nullable, `nullOnDelete`) is set by the server when a bill charges the day — that is what makes it "billed" and locks it. **"Paid" is never stored:** it is derived FIFO from the ledger (`Ledger::paidBillIds`). `tutor_id` is never mass-assignable / never from input. |
 | `push_subscriptions` | `user_id` | web-push (PWA). |
 | `banners` | **not tenant-scoped** (platform-wide) | **Banner Notifications** — super_admin-only app-wide announcement bar. `audience` `everyone`/`tutors`/`students` (CHECK) decides who sees it; `is_active` toggles it on/off; `content` is **sanitised allowlist HTML** (see `App\Support\HtmlSanitizer`, never raw); `created_by` is the composing super_admin (nulled on delete). Not owned by any tutor — it is a global broadcast, like the shared exam-paper exception. |
 | `patch_notes` | **not tenant-scoped** (platform-wide) | **Patch Notes** — public changelog. Everyone reads; only the super_admin writes. `title`, free-text `version` (nullable), `body` **sanitised allowlist HTML**; optional image on **R2** (`image_path` object key + `image_name`, streamed inline through an auth-gated route — never a public URL); `created_by` nulled on delete. |

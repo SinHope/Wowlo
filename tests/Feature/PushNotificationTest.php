@@ -95,6 +95,18 @@ it('notifies the receiver when a message is sent', function () {
     Notification::assertSentTo($student, NewMessageNotification::class);
 });
 
+it('links a message push to the receiver\'s own message page', function () {
+    $tutor = tutor();
+    $student = student(['tutor_id' => $tutor->id]);
+    $toStudent = \App\Models\Message::create(['sender_id' => $tutor->id, 'receiver_id' => $student->id, 'subject' => 'Hi', 'body' => 'Hello']);
+    $toTutor = \App\Models\Message::create(['sender_id' => $student->id, 'receiver_id' => $tutor->id, 'subject' => 'Hi', 'body' => 'Hello']);
+
+    $url = fn ($message, $user) => (new NewMessageNotification($message))->toWebPush($user, null)->toArray()['data']['url'];
+
+    expect($url($toStudent, $student))->toBe(route('student.messages.show', $toStudent, false))
+        ->and($url($toTutor, $tutor))->toBe(route('tutor.messages.show', $toTutor, false));
+});
+
 it('does not notify anyone other than the assigned student', function () {
     Notification::fake();
     Storage::fake('r2');

@@ -51,4 +51,12 @@ class Bill extends Model
     {
         return $this->hasMany(BillCharge::class);
     }
+
+    /**
+     * Attendance days this bill charges for.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

@@ -18,6 +18,12 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+// End-to-end browser tests (Pest browser plugin + Playwright). Run separately:
+//   ./vendor/bin/pest tests/Browser
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Browser');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
@@ -61,4 +67,61 @@ function superAdmin(array $attrs = []): \App\Models\User
 function student(array $attrs = []): \App\Models\User
 {
     return \App\Models\User::factory()->create(array_merge(['role' => 'student'], $attrs));
+}
+
+// ---- Attendance Tracking helpers (shared by AttendanceTest, MultiTutorTest, BillingTest, LedgerPaidBillsTest) ----
+
+function attDate(int $daysAgo): string
+{
+    return now()->subDays($daysAgo)->toDateString();
+}
+
+/** A saved attendance day, owned by $student's tutor. */
+function attDay(\App\Models\User $student, string $date, ?int $billId = null): \App\Models\Attendance
+{
+    return \App\Models\Attendance::forceCreate([
+        'tutor_id' => $student->tutor_id,
+        'student_id' => $student->id,
+        'lesson_date' => $date,
+        'bill_id' => $billId,
+    ]);
+}
+
+/** A bill straight into the DB (charges_total is what the ledger reads). */
+function attBill(\App\Models\User $student, float $total, string $month = '2026-06-01'): \App\Models\Bill
+{
+    return \App\Models\Bill::create([
+        'student_id' => $student->id,
+        'tutor_id' => $student->tutor_id,
+        'billing_month' => $month,
+        'lessons_subtotal' => $total,
+        'charges_total' => $total,
+        'grand_total' => $total,
+        'currency' => 'SGD',
+    ]);
+}
+
+function attPay(\App\Models\User $student, float $amount): \App\Models\Payment
+{
+    return \App\Models\Payment::create([
+        'student_id' => $student->id,
+        'amount_paid' => $amount,
+        'payment_date' => now()->toDateString(),
+        'payment_method' => 'cash',
+    ]);
+}
+
+function attRows($response): array
+{
+    return collect($response->viewData('config')['rows'])->pluck('status', 'date')->all();
+}
+
+function attBillingPayload(array $overrides = []): array
+{
+    return array_merge([
+        'window_from' => now()->startOfMonth()->subMonth()->toDateString(),
+        'window_to' => now()->toDateString(),
+        'view' => 'calendar',
+        'month' => now()->format('Y-m'),
+    ], $overrides);
 }

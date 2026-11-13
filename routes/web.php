@@ -10,7 +10,9 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PatchNoteController;
 use App\Http\Controllers\Admin\PatchNoteController as AdminPatchNoteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
 use App\Http\Controllers\Student\FeeController as StudentFeeController;
 use App\Http\Controllers\Student\HomeworkController as StudentHomeworkController;
 use App\Http\Controllers\Student\MessageController as StudentMessageController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Student\ExamPaperController as StudentExamPaperControll
 use App\Http\Controllers\Student\QuizController as StudentQuizController;
 use App\Http\Controllers\Student\SpellingController as StudentSpellingController;
 use App\Http\Controllers\Student\MultiplicationController as StudentMultiplicationController;
+use App\Http\Controllers\Tutor\AttendanceController as TutorAttendanceController;
 use App\Http\Controllers\Tutor\BillController as TutorBillController;
 use App\Http\Controllers\Tutor\ExamPaperController as TutorExamPaperController;
 use App\Http\Controllers\Tutor\FinanceController as TutorFinanceController;
@@ -125,6 +128,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Appearance settings: light/dark/system theme + app background.
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
     // PWA web-push subscription register/remove (best-effort enhancement).
     Route::post('/push/subscribe', [PushSubscriptionController::class, 'store'])->name('push.subscribe');
     Route::delete('/push/subscribe', [PushSubscriptionController::class, 'destroy'])->name('push.unsubscribe');
@@ -181,11 +188,22 @@ Route::middleware(['auth', 'verified', 'role:tutor,super_admin'])
         Route::post('finance/{student}/payments', [TutorFinanceController::class, 'storePayment'])->name('finance.payments.store');
         Route::delete('finance/payments/{payment}', [TutorFinanceController::class, 'destroyPayment'])->name('finance.payments.destroy');
 
+        // Attendance Tracking — pick a student, tick attended days (calendar/list),
+        // Save, or push the ticked days into a pre-filled WhatsApp bill.
+        // {student} is a plain id, resolved via auth()->user()->students() (404 if not theirs).
+        Route::get('attendance', [TutorAttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('attendance/{student}', [TutorAttendanceController::class, 'show'])->whereNumber('student')->name('attendance.show');
+        Route::put('attendance/{student}', [TutorAttendanceController::class, 'update'])->whereNumber('student')->name('attendance.update');
+        Route::post('attendance/{student}/billing', [TutorAttendanceController::class, 'toBilling'])->whereNumber('student')->name('attendance.billing');
+
         // WhatsApp Billing — generate, persist, and view bills.
         Route::get('billing', [TutorBillController::class, 'index'])->name('billing.index');
         Route::get('billing/create', [TutorBillController::class, 'create'])->name('billing.create');
         Route::post('billing', [TutorBillController::class, 'store'])->name('billing.store');
         Route::get('billing/{bill}', [TutorBillController::class, 'show'])->name('billing.show');
+        Route::get('billing/{bill}/edit', [TutorBillController::class, 'edit'])->name('billing.edit');
+        Route::put('billing/{bill}', [TutorBillController::class, 'update'])->name('billing.update');
+        Route::delete('billing/{bill}', [TutorBillController::class, 'destroy'])->name('billing.destroy');
 
         // Exam Papers — SHARED moderated library. Tutors submit (→ pending),
         // the super_admin approves/rejects; approved papers are visible to all.
@@ -263,8 +281,14 @@ Route::middleware(['auth', 'verified', 'role:student'])
         Route::get('homework/{homework}/download', [StudentHomeworkController::class, 'download'])->name('homework.download');
         Route::get('homework/{homework}', [StudentHomeworkController::class, 'show'])->name('homework.show');
 
-        // Messages — student inbox (read-only; cannot reply in MVP).
+        // Attendance — read-only, always the logged-in student's own days (no id in the URL).
+        Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
+
+        // Messages — inbox/sent, plus messaging their OWN tutor (recipient set
+        // server-side; capped at config('wowlo.student_messages_per_hour')).
         Route::get('messages', [StudentMessageController::class, 'index'])->name('messages.index');
+        Route::get('messages/create', [StudentMessageController::class, 'create'])->name('messages.create');
+        Route::post('messages', [StudentMessageController::class, 'store'])->name('messages.store');
         Route::get('messages/{message}', [StudentMessageController::class, 'show'])->name('messages.show');
 
         // Fees — parent unlock gate, then read-only fee page.

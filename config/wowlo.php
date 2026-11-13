@@ -184,4 +184,25 @@ return [
         'Others',
     ],
 
+    /*
+    | How many messages a student can send their tutor per hour (anti-spam).
+    | Enforced server-side by the rate limiter in Student\MessageController;
+    | the compose page shows how many are left. Automatic notices (e.g. an
+    | answer sheet submitted) don't count — only the "Message my tutor" form.
+    */
+    'student_messages_per_hour' => 5,
+
+    /*
+    | Appearance themes a user can pick in Settings (users.theme). 'system'
+    | follows the device's light/dark preference.
+    */
+    'themes' => ['system', 'light', 'dark'],
+
+    /*
+    | Card opacity range (percent) for the Settings "Card transparency" slider,
+    | used only when an app background is set. The floor keeps text readable
+    | (frosted cards below ~50% get hard to read over busy pictures).
+    */
+    'card_opacity_min' => 50,
+
 ];

@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-2xl font-extrabold text-ink">Inbox</h2>
-                <p class="text-muted">{{ $messages->total() }} received · notices from the admin (e.g. exam-paper approvals)</p>
+                <p class="text-muted">{{ $messages->total() }} received · messages from your students, plus notices (e.g. exam-paper approvals)</p>
             </div>
             <a href="{{ route('tutor.messages.index') }}"
                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-ink transition-colors duration-200 hover:bg-gray-50 cursor-pointer">
@@ -33,7 +33,7 @@
         @empty
             <div class="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
                 <p class="text-lg font-bold text-ink">Your inbox is empty</p>
-                <p class="mt-1 text-sm text-muted">Approval notices and admin messages will appear here.</p>
+                <p class="mt-1 text-sm text-muted">Messages from your students and admin notices will appear here.</p>
             </div>
         @endforelse
 
