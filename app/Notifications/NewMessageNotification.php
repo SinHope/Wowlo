@@ -29,6 +29,10 @@ class NewMessageNotification extends Notification
             ->title('New message: ' . Str::limit($this->message->subject, 50))
             ->icon('/images/pwa/icon-192.png')
             ->body(Str::limit($this->message->body, 80))
-            ->data(['url' => route('student.messages.show', $this->message, false)]);
+            // Tap-through goes to the receiver's own message page — tutors also
+            // receive messages (student messages, approval notices, sheet submissions).
+            ->data(['url' => $notifiable->isStudent()
+                ? route('student.messages.show', $this->message, false)
+                : route('tutor.messages.show', $this->message, false)]);
     }
 }

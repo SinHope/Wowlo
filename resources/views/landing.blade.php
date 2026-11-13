@@ -261,7 +261,7 @@
                 $features = [
                     ['t' => 'Homework', 'd' => 'See what\'s due, open attachments, and mark it done when you finish.',
                      'i' => 'M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25'],
-                    ['t' => 'Messages', 'd' => 'Get notes and reminders from your tutor, with unread badges so nothing slips.',
+                    ['t' => 'Messages', 'd' => 'Get notes and reminders from your tutor and message them back, with unread badges so nothing slips.',
                      'i' => 'M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75'],
                     ['t' => 'Fees &amp; WhatsApp billing', 'd' => 'A clear fee statement for parents, and tidy WhatsApp bills your tutor can send in a tap.',
                      'i' => 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z'],

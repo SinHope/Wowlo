@@ -20,6 +20,7 @@ A two-way communication channel between **tutors** and the **super_admin** (and,
 
 - **`messages` table** (`2026_06_01_000000_create_messages_table.php`): `sender_id`, `receiver_id` (both FK → `users`), `subject`, `body`, `is_read`, index on `(receiver_id, is_read)`. **No attachment columns yet.**
 - **Super_admin → tutor messages already happen**: exam-paper approval sends the uploader a Message, and `Tutor\MessageController@inbox` already lists a tutor's received messages with an unread badge in the sidebar. So the *receiving* half of the channel exists — this feature formalises the *sending* half (tutor → super_admin) and the UI around it.
+- **Students → their tutor already happens** (Slice 19, [student-messages.md](student-messages.md)): student messages land in the same tutor Inbox, so the "pinned admin section vs students section" split below now separates real traffic. Reuse its `reply_to` prefill + `Message::replySubject()` for contact-form replies, and its `RateLimiter` pattern if tutors need a cap.
 - **`Tutor\MessageController@show`** already does the party check (sender or receiver, else **404**) and marks received messages read.
 - **R2 attachment pattern** (from homework): file → private `r2` disk, DB stores the object key + original name, downloads stream through an authorized controller route. Validation: `pdf,doc,docx,jpg,jpeg,png`, max 25MB.
 - **Sidebar** (`layouts/app.blade.php`): the tutor menu is one array with an `$isSuperAdmin` conditional already (the "Tutors" tab). The new tab uses the inverse condition.

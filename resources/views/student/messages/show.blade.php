@@ -3,22 +3,47 @@
 
     <div class="mx-auto max-w-2xl space-y-5">
 
+        @php $received = $message->receiver_id === auth()->id(); @endphp
+
         <div class="flex items-center gap-3">
-            <a href="{{ route('student.messages.index') }}" class="text-muted hover:text-ink" aria-label="Back">
+            <a href="{{ route('student.messages.index', $received ? [] : ['box' => 'sent']) }}" class="text-muted hover:text-ink" aria-label="Back">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
             </a>
             <h2 class="text-2xl font-extrabold text-ink">Message</h2>
         </div>
 
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 class="text-xl font-bold text-ink">{{ $message->subject }}</h3>
+            <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-xl font-bold text-ink">{{ $message->subject }}</h3>
+                @unless ($received)
+                    @if ($message->is_read)
+                        <span class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">Read by tutor</span>
+                    @else
+                        <span class="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent-dark">Not read yet</span>
+                    @endif
+                @endunless
+            </div>
             <p class="mt-1 text-sm text-muted">
-                From {{ $message->sender->name }} · {{ $message->created_at->format('d M Y, g:i A') }}
+                @if ($received)
+                    From {{ $message->sender->name }} · {{ $message->created_at->format('d M Y, g:i A') }}
+                @else
+                    To {{ $message->receiver->name }} · {{ $message->created_at->format('d M Y, g:i A') }}
+                @endif
             </p>
 
             <hr class="my-4 border-gray-100">
 
             <div class="whitespace-pre-line text-sm leading-relaxed text-ink">{{ $message->body }}</div>
         </div>
+
+        @if ($received && auth()->user()->tutor_id)
+            <div class="flex justify-end">
+                <a href="{{ route('student.messages.create', ['reply_to' => $message->id]) }}"
+                   class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-dark cursor-pointer">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" /></svg>
+                    Reply
+                </a>
+            </div>
+        @endif
     </div>
 </x-app-layout>

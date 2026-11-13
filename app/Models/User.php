@@ -143,7 +143,8 @@ class User extends Authenticatable
     }
 
     /**
-     * Messages this user has received (as a student/parent).
+     * Messages this user has received (students from their tutor; tutors from
+     * their students, plus admin/system notices).
      */
     public function receivedMessages(): HasMany
     {
@@ -151,7 +152,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Messages this user has sent (as a tutor).
+     * Messages this user has sent (tutors to students; students to their tutor).
      */
     public function sentMessages(): HasMany
     {
@@ -180,6 +181,14 @@ class User extends Authenticatable
     public function bills(): HasMany
     {
         return $this->hasMany(Bill::class, 'student_id');
+    }
+
+    /**
+     * Days this student attended a lesson (Attendance Tracking).
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'student_id');
     }
 
     /**

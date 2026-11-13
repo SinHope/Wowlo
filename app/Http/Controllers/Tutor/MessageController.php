@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\MessageRequest;
 use App\Models\Message;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class MessageController extends Controller
@@ -24,7 +25,8 @@ class MessageController extends Controller
     }
 
     /**
-     * Messages this teacher has RECEIVED (e.g. exam-paper approval notices).
+     * Messages this teacher has RECEIVED — from their students, plus notices
+     * (e.g. exam-paper approvals, answer-sheet submissions).
      */
     public function inbox(): View
     {
@@ -36,10 +38,21 @@ class MessageController extends Controller
         return view('tutor.messages.inbox', compact('messages'));
     }
 
-    public function create(): View
+    /**
+     * Compose. ?reply_to={id} prefills the student + "Re: …" from a message
+     * one of this teacher's own students sent them (anything else is ignored).
+     */
+    public function create(Request $request): View
     {
+        $replyTo = $request->filled('reply_to')
+            ? Message::where('receiver_id', auth()->id())
+                ->whereIn('sender_id', auth()->user()->students()->select('id'))
+                ->find($request->integer('reply_to'))
+            : null;
+
         return view('tutor.messages.create', [
             'students' => $this->students(),
+            'replyTo' => $replyTo,
         ]);
     }
 

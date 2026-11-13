@@ -33,9 +33,9 @@ Content is **role-specific**:
 
 | Role | Cards covered |
 |---|---|
-| `super_admin` | Welcome · Dashboard · **Tutors** · Students · Homework · Messages & Inbox · Finance & WhatsApp Billing · Exam Papers (you approve) · Quizzes · Password · Done |
-| `tutor` | Welcome · Dashboard · Students · Homework · Messages & Inbox · Finance & WhatsApp Billing · Exam Papers (upload → pending) · Quizzes · Password · Done |
-| `student` | Welcome · Dashboard · Homework · Messages · Tuition Fee · Exam Papers · Quizzes · Password · Done |
+| `super_admin` | Welcome · Dashboard · **Tutors** · Students · Homework · Messages & Inbox · **Attendance** · Finance & WhatsApp Billing · Exam Papers (you approve) · Quizzes · Password · Done |
+| `tutor` | Welcome · Dashboard · Students · Homework · Messages & Inbox · **Attendance** · Finance & WhatsApp Billing · Exam Papers (upload → pending) · Quizzes · Password · Done |
+| `student` | Welcome · Dashboard · Homework · **Attendance** · Messages · Tuition Fee · Exam Papers · Quizzes · Password · Done |
 
 ---
 
@@ -135,3 +135,6 @@ If you change a step's title/body or add/remove a step in one, **mirror it in th
 The page also carries a **static FAQ** section (seven Q&As) beneath the carousel, plus matching **`FAQPage`** JSON-LD. This is the page's main SEO / AI-Overview asset — unlike the Alpine carousel (whose copy is JS-rendered), the FAQ is plain crawlable HTML.
 
 > ⚠️ Both the visible FAQ cards **and** the schema render from a single `$faqs` array in `how-to-use.blade.php`. **Edit the array, never the JSON-LD by hand** — that's what keeps the visible text and the structured data identical (Google rejects `FAQPage` markup that doesn't match on-page text). Keep the answers accurate to how Wowlo actually works (free, tutor-provisioned accounts, data isolation, PWA). Context: [`seo-audit/ACTION-PLAN.md`](../seo-audit/ACTION-PLAN.md) item M2.
+
+### Attendance step (added with Slice 20, 2026-11-13)
+An **Attendance** card was added to all three role tours (tutor/super_admin: just before *Finance & WhatsApp Billing*, matching the sidebar order; student: after *Homework*) and to both audiences on `/how-to-use`. As always the copy lives in **both** files. The public page names `tutor-attendance.jpeg` / `student-attendance.jpeg` in `public/images/how-to-use/`; until those screenshots are added the card simply shows its calendar icon. Accounts that had already finished the tour (`onboarded_at` set) would have missed the new card, so the owner chose to **re-show the tour to everyone once**: data-only migration `2026_11_14_000010_reset_onboarding_for_attendance_step.php` sets `onboarded_at = NULL` for every user (no schema change; `down()` is a no-op). It runs when Attendance deploys (Render runs `migrate --force` on boot), so it fires exactly once, at the right moment. **To nudge everyone again after a future tour change, add a NEW migration like it** — never edit one that already ran. There is no admin UI for this; it's a migration (or a one-off `UPDATE users SET onboarded_at = NULL` after a Neon backup, scoped with a `WHERE role = …` if you only want some roles).

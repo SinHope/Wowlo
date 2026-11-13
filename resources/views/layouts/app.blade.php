@@ -1,5 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    // Per-user appearance (Settings). theme: system|light|dark; background: optional image.
+    $uiTheme = auth()->user()?->theme ?? 'system';
+    $uiBg    = \App\Support\AppBackgrounds::urlFor(auth()->user()?->app_background);
+    // Card opacity (percent → 0-1), only meaningful with a background.
+    $uiAlpha = max(config('wowlo.card_opacity_min'), min(100, (int) (auth()->user()?->card_opacity ?? 100))) / 100;
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $uiTheme }}"
+      @if ($uiBg) data-bg @if ($uiAlpha < 1) data-glass="1" @endif style="--app-bg: url('{{ $uiBg }}'); --surface-alpha: {{ $uiAlpha }}" @endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +16,35 @@
         <title>{{ config('app.name', 'Wowlo') }}</title>
 
         <link rel="icon" type="image/x-icon" href="{{ asset('images/favicon/wowlo_favicon.ico') }}">
+
+        {{-- Apply the theme before first paint (no light-to-dark flash). Also exposes the
+             helpers the Settings page uses for live preview. --}}
+        <script>
+            (function () {
+                var root = document.documentElement, mq = window.matchMedia('(prefers-color-scheme: dark)');
+                function apply(t) {
+                    root.dataset.theme = t;
+                    var dark = t === 'dark' || (t === 'system' && mq.matches);
+                    root.classList.toggle('dark', dark);
+                    var m = document.querySelector('meta[name="theme-color"]');
+                    if (m) m.setAttribute('content', dark ? '#1A1624' : '#7C3AED');
+                }
+                window.wowloAppearance = {
+                    theme: apply,
+                    bg: function (url) {
+                        if (url) { root.setAttribute('data-bg', ''); root.style.setProperty('--app-bg', "url('" + url + "')"); }
+                        else { root.removeAttribute('data-bg'); root.style.removeProperty('--app-bg'); }
+                    },
+                    // pct = card opacity percent (50-100).
+                    opacity: function (pct) {
+                        root.style.setProperty('--surface-alpha', String(pct / 100));
+                        root.toggleAttribute('data-glass', pct < 100);
+                    },
+                };
+                apply(root.dataset.theme || 'system');
+                if (mq.addEventListener) mq.addEventListener('change', function () { apply(root.dataset.theme || 'system'); });
+            })();
+        </script>
 
         <!-- PWA -->
         <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -47,6 +84,7 @@
                 'folder'   => 'M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z',
                 'game'     => 'M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z',
                 'megaphone' => 'M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.51l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46',
+                'calendar'  => 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z',
                 'sparkles'  => 'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z',
             ];
 
@@ -141,6 +179,7 @@
                 ['label' => 'Messages',          'icon' => 'mail',  'href' => route('tutor.messages.index'), 'active' => request()->routeIs('tutor.messages.index', 'tutor.messages.create', 'tutor.messages.show')],
                 ['label' => 'Inbox',             'icon' => 'chat',  'href' => route('tutor.messages.inbox'), 'active' => request()->routeIs('tutor.messages.inbox'), 'badge' => $authUser->receivedMessages()->where('is_read', false)->count()],
                 ['label' => 'Finance',           'icon' => 'money', 'href' => route('tutor.finance.index'), 'active' => request()->routeIs('tutor.finance.*')],
+                ['label' => 'Attendance',        'icon' => 'calendar', 'href' => route('tutor.attendance.index'), 'active' => request()->routeIs('tutor.attendance.*'), 'loading' => 'Attendance tracking…'],
                 ['label' => 'WhatsApp Billing',  'icon' => 'chat',  'href' => route('tutor.billing.index'), 'active' => request()->routeIs('tutor.billing.*')],
                 ['label' => 'Exam Papers',       'icon' => 'doc',   'href' => route('tutor.exam-papers.index'), 'active' => request()->routeIs('tutor.exam-papers.*')],
                 ['label' => 'Quizzes',           'icon' => 'quiz',  'href' => route('tutor.quizzes.index'), 'active' => request()->routeIs('tutor.quizzes.*')],
@@ -150,6 +189,7 @@
             ])) : [
                 ['label' => 'Dashboard',     'icon' => 'home',  'href' => route('dashboard'), 'active' => request()->routeIs('dashboard')],
                 ['label' => 'Homework',      'icon' => 'book',  'href' => route('student.homework.index'), 'active' => request()->routeIs('student.homework.*')],
+                ['label' => 'Attendance',    'icon' => 'calendar', 'href' => route('student.attendance.index'), 'active' => request()->routeIs('student.attendance.*'), 'loading' => 'Attendance tracking…'],
                 ['label' => 'Messages',      'icon' => 'mail',  'href' => route('student.messages.index'), 'active' => request()->routeIs('student.messages.*'), 'badge' => auth()->user()->receivedMessages()->where('is_read', false)->count()],
                 ['label' => 'Tuition Fee',   'icon' => 'money', 'href' => route('student.fees.index'), 'active' => request()->routeIs('student.fees.*')],
                 ['label' => 'Exam Papers',   'icon' => 'doc',   'href' => route('student.exam-papers.index'), 'active' => request()->routeIs('student.exam-papers.*')],
@@ -161,7 +201,12 @@
             ];
         @endphp
 
-        <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-cream">
+        {{-- `busy`/`stage` drive the full-screen nav spinner (sidebar links with a 'loading' label).
+             The overlay lives HERE, outside <aside>, because the aside has a CSS transform and
+             would otherwise trap a position:fixed overlay inside the sidebar. `pageshow` clears
+             it when the user returns via the Back button (bfcache). --}}
+        <div x-data="{ sidebarOpen: false, busy: false, stage: '' }" @pageshow.window="busy = false" class="app-shell min-h-screen bg-cream">
+            <x-spinner-overlay />
 
             <!-- Mobile backdrop -->
             <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"
@@ -209,6 +254,9 @@
                             </div>
                         @else
                             <a href="{{ $item['href'] }}"
+                               @if (! empty($item['loading']))
+                               x-on:click="if (! ($event.ctrlKey || $event.metaKey || $event.shiftKey)) { stage = '{{ $item['loading'] }}'; busy = true; }"
+                               @endif
                                @class([
                                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors duration-200 cursor-pointer',
                                    'bg-primary text-white' => $item['active'],
@@ -265,6 +313,7 @@
                         <div x-show="menu" @click.outside="menu = false" x-transition style="display:none"
                              class="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                             <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-ink hover:bg-gray-100">Profile</a>
+                            <a href="{{ route('settings.edit') }}" class="block px-4 py-2 text-sm text-ink hover:bg-gray-100">Settings</a>
                             <button type="button" @click="$dispatch('wowlo:replay-onboarding'); menu = false"
                                     class="block w-full px-4 py-2 text-left text-sm text-ink hover:bg-gray-100 cursor-pointer">Replay tutorial</button>
                             <form method="POST" action="{{ route('logout') }}">

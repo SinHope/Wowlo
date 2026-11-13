@@ -39,4 +39,39 @@ class Ledger
     {
         return round(static::totalBilled($student) - static::totalPaid($student), 2);
     }
+
+    /**
+     * IDs of this student's bills that are fully paid, derived — never stored.
+     *
+     * Bills have no "paid" flag (outstanding is derived from the ledger), so we
+     * apply payments oldest-bill-first (FIFO by billing_month, then id): a bill
+     * is paid once the running total of bills up to and including it is covered
+     * by everything paid so far. Everything after the first unpaid bill stays
+     * unpaid, even if a later bill is smaller. Used to turn attendance days green.
+     *
+     * @return array<int, int>
+     */
+    public static function paidBillIds(User $student): array
+    {
+        $paid = static::totalPaid($student);
+        $running = 0.0;
+        $ids = [];
+
+        $bills = $student->bills()
+            ->orderBy('billing_month')
+            ->orderBy('id')
+            ->get(['id', 'charges_total']);
+
+        foreach ($bills as $bill) {
+            $running = round($running + (float) $bill->charges_total, 2);
+
+            if ($running > $paid + 0.005) {
+                break;
+            }
+
+            $ids[] = $bill->id;
+        }
+
+        return $ids;
+    }
 }

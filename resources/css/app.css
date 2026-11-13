@@ -4,3 +4,124 @@
 
 /* Prevent a flash of Alpine x-show content before Alpine initializes. */
 [x-cloak] { display: none !important; }
+
+/* ------------------------------------------------------------------
+   Theming (Settings → Appearance)
+   Brand tokens (cream / ink / muted) are CSS variables so Tailwind
+   utilities flip with the theme. The `.dark` block below also remaps
+   the stock gray/white utilities the views use, so existing pages go
+   dark without editing every Blade file. Set by <html class="dark">
+   (see the inline script in layouts/app.blade.php).
+------------------------------------------------------------------- */
+:root {
+    --c-cream: 255 251 245;
+    --c-ink: 42 34 53;
+    --c-muted: 107 94 115;
+    --c-surface: 255 255 255;
+}
+html { background-color: rgb(var(--c-cream)); }
+
+html.dark {
+    color-scheme: dark;
+    --c-cream: 20 17 28;
+    --c-ink: 236 232 243;
+    --c-muted: 168 158 182;
+    --c-surface: 33 28 44;
+}
+
+.dark .bg-white { background-color: rgb(var(--c-surface)); }
+.dark .bg-gray-50, .dark .hover\:bg-gray-50:hover { background-color: #2a2438; }
+.dark .bg-gray-100, .dark .hover\:bg-gray-100:hover { background-color: #332c42; }
+.dark .bg-gray-200 { background-color: #3d3550; }
+.dark .bg-amber-50, .dark .bg-amber-100 { background-color: rgb(245 158 11 / .16); }
+.dark .bg-emerald-50 { background-color: rgb(16 185 129 / .16); }
+.dark .border-gray-100, .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #332c42; }
+.dark .border-gray-200, .dark .ring-gray-200 { border-color: #3d3550; --tw-ring-color: #3d3550; }
+.dark .border-gray-300, .dark .ring-gray-300 { border-color: #4a4160; --tw-ring-color: #4a4160; }
+.dark .border-amber-200 { border-color: rgb(245 158 11 / .35); }
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 { color: rgb(var(--c-ink)); }
+.dark .text-gray-600, .dark .text-gray-500 { color: rgb(var(--c-muted)); }
+.dark .text-gray-400, .dark .text-gray-300, .dark .text-gray-200 { color: #9d93ab; }
+.dark .text-amber-600, .dark .text-amber-700, .dark .text-amber-800 { color: #fbbf24; }
+.dark .text-teal-700 { color: #5eead4; }
+.dark .text-emerald-700, .dark .text-emerald-800 { color: #6ee7b7; }
+.dark .text-red-700 { color: #fca5a5; }
+.dark .text-primary-dark { color: #c4b5fd; }
+
+/* @tailwindcss/forms paints inputs white; keep checkboxes/radios/buttons untouched. */
+.dark :where(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=submit], [type=button], [type=file], [type=image]), select, textarea) {
+    background-color: rgb(var(--c-surface));
+    color: rgb(var(--c-ink));
+    border-color: #4a4160;
+}
+.dark ::placeholder { color: #9d93ab; opacity: 1; }
+
+/* Brand + status text: the light-mode shades are too dark on dark surfaces
+   (<4.5:1). Swap to lighter tints in dark only. Backgrounds/buttons keep the brand colour. */
+.dark .text-primary, .dark .hover\:text-primary:hover { color: #a78bfa; }
+.dark .hover\:text-primary-dark:hover { color: #c4b5fd; }
+.dark .text-success, .dark .text-green-600, .dark .text-emerald-600 { color: #4ade80; }
+.dark .text-danger, .dark .text-red-600 { color: #f87171; }
+.dark .text-accent-dark { color: #fbbf24; }
+.dark .text-teal-500, .dark .text-teal-600 { color: #2dd4bf; }
+
+/* Pale tints → translucent tints, so chips/alerts don't glow on dark. */
+.dark .bg-red-100 { background-color: rgb(239 68 68 / .18); }
+.dark .bg-indigo-50 { background-color: rgb(99 102 241 / .16); }
+.dark .hover\:bg-emerald-100:hover { background-color: rgb(16 185 129 / .22); }
+.dark .border-emerald-200 { border-color: rgb(16 185 129 / .35); }
+.dark .divide-amber-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgb(245 158 11 / .2); }
+.dark .from-emerald-50 { --tw-gradient-from: rgb(16 185 129 / .14) var(--tw-gradient-from-position); --tw-gradient-to: rgb(16 185 129 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+.dark .via-white { --tw-gradient-to: rgb(var(--c-surface) / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(var(--c-surface)) var(--tw-gradient-via-position), var(--tw-gradient-to); }
+.dark .to-teal-50 { --tw-gradient-to: rgb(20 184 166 / .14) var(--tw-gradient-to-position); }
+
+/* Modal backdrops use bg-ink/40|50; ink turns light in dark mode, so pin them dark. */
+.dark .bg-ink\/40 { background-color: rgb(0 0 0 / .6); }
+.dark .bg-ink\/50 { background-color: rgb(0 0 0 / .7); }
+
+/* A card sitting on the dark page needs a visible edge (shadows barely show on dark). */
+.dark .shadow-sm, .dark .shadow, .dark .shadow-lg { --tw-shadow-color: rgb(0 0 0 / .5); --tw-shadow: var(--tw-shadow-colored); }
+
+/* App background image: fixed layer + soft wash so text stays readable. */
+html[data-bg] body::before,
+html[data-bg] body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+html[data-bg] body::before {
+    background: var(--app-bg) center / cover no-repeat;
+}
+html[data-bg] body::after {
+    background-color: rgb(var(--c-cream) / .35);
+}
+html[data-bg] .app-shell { background-color: transparent; }
+
+/* "Card transparency" (Settings): with a background, page-level surfaces (cards,
+   sidebar, header) become frosted glass at --surface-alpha so the picture shows
+   through. The blur keeps text readable. Floating things (modals, dropdowns, the
+   install banner: anything with a big shadow or inside a full-screen overlay)
+   stay solid. */
+:root { --c-gray50: 249 250 251; --surface-alpha: 1; }
+html.dark { --c-gray50: 42 36 56; }
+html[data-bg] .bg-white { background-color: rgb(var(--c-surface) / var(--surface-alpha)); }
+html[data-bg] .bg-gray-50 { background-color: rgb(var(--c-gray50) / var(--surface-alpha)); }
+/* Blur only while transparent (data-glass), and never on a surface that contains
+   a fixed modal or a z-indexed dropdown: backdrop-filter, like transform, traps
+   position:fixed children and clips popovers. Browsers without :has() drop this
+   rule and just get translucent cards. */
+html[data-bg][data-glass] .bg-white:not(input, select, textarea):not(:has(.fixed, .absolute.z-10, .absolute.z-20, .absolute.z-30, .absolute.z-40, .absolute.z-50)) {
+    -webkit-backdrop-filter: blur(calc((1 - var(--surface-alpha)) * 28px)) saturate(1.2);
+    backdrop-filter: blur(calc((1 - var(--surface-alpha)) * 28px)) saturate(1.2);
+}
+html[data-bg] :is(.shadow-lg, .shadow-xl, .shadow-2xl).bg-white,
+html[data-bg] .fixed.inset-0 .bg-white,
+html[data-bg] .fixed.inset-0 .bg-gray-50 {
+    background-color: rgb(var(--c-surface));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+/* Inputs stay solid so typing is always readable. */
+html[data-bg] :is(input, select, textarea).bg-white { background-color: rgb(var(--c-surface)); }

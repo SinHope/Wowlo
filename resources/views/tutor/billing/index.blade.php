@@ -17,6 +17,14 @@
             </a>
         </div>
 
+        @if (session('status'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                 class="flex items-center justify-between rounded-xl border border-success/30 bg-success/10 px-4 py-3">
+                <p class="text-sm font-semibold text-success">{{ session('status') }}</p>
+                <button @click="show = false" class="text-success cursor-pointer" aria-label="Dismiss">&times;</button>
+            </div>
+        @endif
+
         @forelse ($bills as $bill)
             <a href="{{ route('tutor.billing.show', $bill) }}"
                class="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-colors duration-200 hover:border-primary/40 hover:bg-primary/5 cursor-pointer">

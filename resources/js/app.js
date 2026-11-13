@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
+import './attendance';
 
 Alpine.plugin(collapse);
 window.Alpine = Alpine;

@@ -11,7 +11,7 @@
 | Item | Detail |
 |---|---|
 | Framework | **Pest** (wraps PHPUnit) |
-| Total tests | **189** passing (as of Slice 14 — Spelling Meow) |
+| Total tests | **323+** passing (as of Slice 20 — Attendance Tracking). Browser (E2E) tests are separate — see §3 I |
 | Database | **In-memory SQLite** — never touches Neon in tests |
 | Run command | `php artisan test` |
 | Parallel | `php artisan test --parallel` (faster, safe) |
@@ -56,10 +56,10 @@ Data must never leak between tutors or students. Covers cross-tutor isolation (a
 `AuthenticationTest`, `RegistrationTest`, `PasswordResetTest`, `PasswordConfirmationTest`, `PasswordUpdateTest`, `EmailVerificationTest`. Cover login/logout, password reset + update, and that **public registration is disabled** (the Breeze register routes are removed — see `routes/auth.php`). Google OAuth linking/rejection logic lives with the auth flow.
 
 ### C. Fee & Billing — `BillingTest.php` + `FinanceTest.php`
-Money is the highest-risk area — these must never be skipped. `FinanceTest` covers fee setup, recording payments, and outstanding-balance math; `BillingTest` covers bill generation and that totals are **recomputed server-side** and **snapshotted** at generation time (changing a rate later doesn't alter old bills).
+Money is the highest-risk area — these must never be skipped. `FinanceTest` covers fee setup, recording payments, and outstanding-balance math; `BillingTest` covers bill generation and that totals are **recomputed server-side** and **snapshotted** at generation time (changing a rate later doesn't alter old bills). Edit/delete: editing recomputes server-side, keeps the student and the "outstanding before" snapshot; deleting cascades lines/charges; cross-tenant edit/update/delete → 404 (`MultiTutorTest`). Lesson dates later than today are rejected server-side on create and edit (`before_or_equal:today`), today itself is accepted.
 
 ### D. Homework & Messages — `HomeworkTest.php`, `MessageTest.php`
-Create/assign homework (with attachment), student mark-as-done, the messages a tutor sends, inbox/read state, and that a student only sees their own.
+Create/assign homework (with attachment), student mark-as-done, the messages a tutor sends, inbox/read state, and that a student only sees their own. Student → tutor messages: recipient forced to the student's own tutor, the 5-per-hour limit (6th blocked, refills after the hour, validation failures and auto-notices don't count), reply prefill scoping, and the tutor Reply flow — see [student-messages.md](student-messages.md).
 
 ### E. Quizzes — `QuizTest.php` (tutor) + `StudentQuizTest.php` (student)
 Tutor quiz creation/assignment/results, and the student side: taking an assigned quiz, **server-side auto-marking** of MCQs (`obtained_marks` recomputed, never client-trusted), one-attempt rule, and that a student can't open an unassigned quiz.
@@ -75,6 +75,17 @@ The first Games-tab game. Covers **server-side marking** (responses graded again
 
 ### G. Push Notifications — `PushNotificationTest.php`
 Uses `Notification::fake()`. New-homework / new-message notifications fire to the right user; a push failure is caught + logged and **never** 500s the request; a user can only manage their own subscription.
+
+### I. Attendance Tracking — `AttendanceTest.php`, `LedgerPaidBillsTest.php`, `ErrorPagesTest.php` (+ isolation cases in `MultiTutorTest.php`, linking cases in `BillingTest.php`)
+Covers: tutor sees only their own students; save adds/removes ticks idempotently with server-side `tutor_id`; a client-sent `tutor_id`/`student_id` is ignored; **future dates** are accepted on Save (up to +1 year) but **refused by Add to Billing** (nothing saved, no prefill); billed days can't be removed; Add to Billing hands only unbilled in-window dates to the bill form (prefill re-checks ownership, hours default to the last billed hours); a day goes attended → billed → paid → attended; a student sees only their own days and **never** billed/paid state; role/guest blocks; **cross-tenant 404s** (another tutor, super_admin, forged prefill). `LedgerPaidBillsTest` pins the derived "paid" rule (FIFO, exact/partial/over payment, ties, zero bills, rounding). `ErrorPagesTest` checks the custom 403/404/419/429/500/503 + 4xx/5xx fallbacks render standalone and never leak exception text. Shared helpers (`attDay`, `attBill`, `attPay`, …) live in `tests/Pest.php`.
+
+**Browser (E2E) tests — `tests/Browser/AttendanceFlowTest.php`** (Pest browser plugin + Playwright/Chromium, dev-only). Real browser: sidebar spinner → centred picker → calendar ticks/count → Save + reload → List View + filter → later-date warning/block pop-ups → tick → Add to Billing → pre-filled bill → billed → paid → student read-only view. **Run separately** (kept out of `php artisan test`):
+```bash
+php vendor/bin/pest tests/Browser
+```
+**Billing browser tests — `tests/Browser/BillingFlowTest.php`** (5 tests): the "Are you sure?" pop-up (Cancel saves nothing, Yes saves), the "Date not allowed" pop-up for a later-than-today lesson, Edit re-saves with new totals, Delete asks first then removes. Run with `php vendor/bin/pest tests/Browser/BillingFlowTest.php` (add `--headed` to watch).
+
+One-time setup on a new machine: `npm install` then `npx playwright install chromium`. On Windows Git Bash use `php vendor/bin/pest …` (the `./vendor/bin/pest` shebang can't find php). A test that stalls gives no output until it ends — run them one at a time with `--filter="..."`; use specific selectors (e.g. `[role="dialog"] button[type="submit"]`, not bare text that also matches a hidden pop-up) and ONE `visit()` per test. Failure screenshots land in `Tests/Browser/Screenshots` (git-ignored).
 
 ### H. Student & Profile — `StudentManagementTest.php`, `ProfileTest.php`, `OnboardingTest.php`
 Tutor adding/editing their own students (tenancy stamped server-side), profile/password update, and the onboarding flag (`onboarded_at`) lifecycle.
@@ -109,7 +120,10 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Tutor sends message → appears in student's inbox
 - [ ] Unread badge shows on student dashboard
 - [ ] Message marked as read after opening
-- [ ] Student cannot reply (no reply button in MVP)
+- [ ] Student **Message my tutor** → lands in the tutor's Inbox (unread badge); student sees it under **Sent** with "Not read yet" → "Read by tutor" once opened
+- [ ] Student **Reply** on a received message prefills "Re: …"; tutor **Reply** on a student message pre-selects the student
+- [ ] Compose box shows "N of 5 messages left this hour"; after 5 sends it turns red, the form is disabled, and shows when they can send again
+- [ ] Pressing Enter in the Subject field does NOT send
 
 ### Finance
 - [ ] Fee section hidden for student by default
@@ -117,6 +131,8 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Wrong password is rejected
 - [ ] Fee section re-locks after session ends (open new browser tab)
 - [ ] WhatsApp billing message generates correctly with correct totals
+- [ ] Billing: picking a lesson date later than today is allowed, but Save shows a "Date not allowed" pop-up (lists the dates, turns them red) and nothing is saved; today's date is fine
+- [ ] Billing: "Save & generate" (green) shows the "Are you sure?" pop-up; Edit (golden) re-saves with new totals; Delete (red) asks first and removes the bill
 - [ ] Outstanding balance calculates correctly after partial payment
 
 ### Quizzes
@@ -152,6 +168,19 @@ Run this manually before every production deploy. Automated tests catch logic; t
 - [ ] Results show score % + per-word right/wrong with the correct spelling
 - [ ] **Reflection gate:** on finishing, the marks + per-word review are shown **first** (top), with the reflection box at the bottom; the rest of the app stays blocked until a reflection is written; Save is disabled until non-empty; any single character is accepted (no minimum)
 - [ ] Tutor sees their students' rounds under **Games → Spelling Meow**, opens one, leaves **Feedback**; the student is notified and sees it on their results page
+
+### Attendance Tracking
+- [ ] Sidebar shows **Attendance** (tutor + student); clicking shows a spinner "Attendance tracking…", then the centred student picker
+- [ ] Pick a student → calendar; tick days → purple glow, red counter pill goes up; untick → goes down
+- [ ] **Save** → spinner "Saving current attendance…", "Attendance saved."; reload keeps the ticks
+- [ ] Tick a **future** day → Save asks "Later date selected" (Go back / Yes, save); Add To Billing shows "Please recheck the dates" and goes nowhere
+- [ ] **Add To Billing** → spinner "Adding to bill…" → bill form pre-filled with the ticked dates (hours from the last bill, blank if first); save the bill → days show an amber **Billed** dot and are locked
+- [ ] Record a payment covering the bill → those days turn **green (Paid)**; delete the bill → days go back to purple
+- [ ] List View: Filter → Specific date / Date range; checkboxes behave like the calendar; counter follows the filter
+- [ ] Leave the page with unsaved ticks → browser asks first; let the session expire, Save → friendly error page → Go back → "Restore unsaved ticks?"
+- [ ] Phone width (375px): calendar fits without sideways scroll
+- [ ] Two windows: tutor A cannot open `/tutor/attendance/<tutor B's student id>` (404); a student sees only their own days and no billed/paid colours
+- [ ] Visit `/does-not-exist` → friendly "Page not found" page (not Laravel's default)
 
 ### PWA & Onboarding
 - [ ] **"Install app"** button shows on the landing + login pages (only when `PWA_PROMOTE_INSTALL=true`); native prompt on Android/desktop Chrome, "Add to Home Screen" steps on iOS

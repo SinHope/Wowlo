@@ -87,7 +87,50 @@ it('404s when a tutor opens another tutor\'s homework, quiz, bill, or finance', 
     $this->actingAs($tutorA)->get(route('tutor.quizzes.show', $quizB))->assertNotFound();
     $this->actingAs($tutorA)->delete(route('tutor.quizzes.destroy', $quizB))->assertNotFound();
     $this->actingAs($tutorA)->get(route('tutor.billing.show', $billB))->assertNotFound();
+    $this->actingAs($tutorA)->get(route('tutor.billing.edit', $billB))->assertNotFound();
+    $this->actingAs($tutorA)->put(route('tutor.billing.update', $billB), [
+        'billing_month' => '2026-06',
+        'lessons' => [['lesson_date' => '2026-06-03', 'hours' => 1]],
+    ])->assertNotFound();
+    $this->actingAs($tutorA)->delete(route('tutor.billing.destroy', $billB))->assertNotFound();
+    expect(Bill::find($billB->id))->not->toBeNull();
     $this->actingAs($tutorA)->get(route('tutor.finance.show', $studentB))->assertNotFound();
+});
+
+// ---- Student → tutor messages ----------------------------------------------
+
+it('delivers a student message only to their own tutor, never another tutor', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentA = student(['tutor_id' => $tutorA->id]);
+
+    // Even with tutor B's id injected, the recipient is the student's own tutor.
+    $this->actingAs($studentA)->post(route('student.messages.store'), [
+        'receiver_id' => $tutorB->id,
+        'subject' => 'A private question', 'body' => 'Only my tutor should see this.',
+    ])->assertSessionHasNoErrors();
+
+    $message = \App\Models\Message::firstWhere('subject', 'A private question');
+    expect($message->receiver_id)->toBe($tutorA->id);
+
+    $this->actingAs($tutorB)->get(route('tutor.messages.inbox'))->assertDontSee('A private question');
+    $this->actingAs($tutorB)->get(route('tutor.messages.show', $message))->assertNotFound();
+});
+
+it('ignores a reply_to pointing at another tutor\'s student message', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentA = student(['tutor_id' => $tutorA->id]);
+    $message = \App\Models\Message::create([
+        'sender_id' => $studentA->id, 'receiver_id' => $tutorA->id,
+        'subject' => 'A private question', 'body' => 'Only my tutor should see this.',
+    ]);
+
+    // Tutor B can't use the reply prefill to read tutor A's message or student.
+    $this->actingAs($tutorB)->get(route('tutor.messages.create', ['reply_to' => $message->id]))
+        ->assertOk()
+        ->assertDontSee('A private question')
+        ->assertDontSee($studentA->name);
 });
 
 it('stops a tutor assigning homework or a quiz to another tutor\'s student', function () {
@@ -480,4 +523,75 @@ it('forbids a regular tutor from approving submissions', function () {
 
     $this->actingAs(tutor())->post(route('tutor.exam-papers.approve', $paper))->assertForbidden();
     expect($paper->fresh()->status)->toBe('pending');
+});
+
+// ---- Attendance Tracking isolation -----------------------------------------------
+
+it('404s every attendance action when a tutor targets another tutor\'s student, leaving their rows untouched', function () {
+    $tutorA = tutor();
+    $tutorB = tutor();
+    $studentA = student(['tutor_id' => $tutorA->id]);
+    $day = now()->subDays(3)->toDateString();
+    attDay($studentA, $day);
+
+    $this->actingAs($tutorB)->get(route('tutor.attendance.show', $studentA))->assertNotFound();
+    $this->actingAs($tutorB)->put(route('tutor.attendance.update', $studentA), ['removed' => [$day], 'added' => [now()->toDateString()]])->assertNotFound();
+    $this->actingAs($tutorB)->post(route('tutor.attendance.billing', $studentA), attBillingPayload(['added' => [now()->toDateString()]]))->assertNotFound();
+
+    expect(\App\Models\Attendance::where('student_id', $studentA->id)->pluck('lesson_date')->map->format('Y-m-d')->all())->toBe([$day]);
+});
+
+it('404s attendance for an id that is not a student of the tutor at all (another tutor, self, unknown)', function () {
+    $tutorA = tutor();
+    $this->actingAs($tutorA)->get(route('tutor.attendance.show', tutor()))->assertNotFound();
+    $this->actingAs($tutorA)->get(route('tutor.attendance.show', $tutorA))->assertNotFound();
+    $this->actingAs($tutorA)->get(route('tutor.attendance.show', 999999))->assertNotFound();
+});
+
+it('keeps the super_admin out of another tutor\'s student attendance', function () {
+    $studentB = student(['tutor_id' => tutor()->id]);
+
+    $this->actingAs(superAdmin())->get(route('tutor.attendance.show', $studentB))->assertNotFound();
+    $this->actingAs(superAdmin())->put(route('tutor.attendance.update', $studentB), ['added' => [now()->toDateString()]])->assertNotFound();
+});
+
+it('ignores a forged attendance prefill that names another tutor\'s student', function () {
+    $tutorA = tutor();
+    $studentB = student(['tutor_id' => tutor()->id, 'name' => 'Secret Student Bee']);
+
+    $this->actingAs($tutorA)
+        ->withSession(['attendance_prefill' => ['student_id' => $studentB->id, 'dates' => [now()->toDateString()], 'billing_month' => now()->format('Y-m')]])
+        ->get(route('tutor.billing.create'))
+        ->assertOk()
+        ->assertViewHas('prefill', null)
+        ->assertDontSee('Pre-filled from Attendance')
+        ->assertDontSee('Secret Student Bee');
+});
+
+it('never shows a student another student\'s attendance', function () {
+    $tutor = tutor();
+    $alice = student(['tutor_id' => $tutor->id]);
+    $bob = student(['tutor_id' => $tutor->id]);
+    attDay($bob, now()->subDays(4)->toDateString());
+
+    $rows = $this->actingAs($alice)->get(route('student.attendance.index'))->viewData('config')['rows'];
+
+    expect($rows)->toBe([]);
+});
+
+it('never lets a bill claim another student\'s attendance day', function () {
+    $tutor = tutor();
+    $alice = student(['tutor_id' => $tutor->id]);
+    \App\Models\TuitionFee::create(['student_id' => $alice->id, 'fee_rate_per_hour' => 50, 'currency' => 'SGD']);
+    $bob = student(['tutor_id' => $tutor->id]);
+    $day = now()->subDays(2)->toDateString();
+    attDay($bob, $day);
+
+    $this->actingAs($tutor)->post(route('tutor.billing.store'), [
+        'student_id' => $alice->id,
+        'billing_month' => now()->format('Y-m'),
+        'lessons' => [['lesson_date' => $day, 'hours' => 1]],
+    ])->assertRedirect();
+
+    expect(\App\Models\Attendance::where('student_id', $bob->id)->first()->bill_id)->toBeNull();
 });
